@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Play you some MTG</title>
+  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="MTG_scripts.js"></script>
+</head>
+<body>
+  <div id="player1_txt">Player 1</div>
+  <canvas id="topHand" width="840" height="104" style="border:2px solid #000000;">
+  Your browser does not support the HTML5 canvas protocol. Lame!</canvas>
+  <br/>
+  <button id="player1_draw" onclick=button_drawCard(deck1,hand1,1);>Draw card</button>
+  <button id="player1_shuffle" onclick=shuffle(deck1);>Shuffle Deck</button>
+  <br/>
+  <canvas id="battlefield" width="840" height="312" style="border:2px solid #000000;"></canvas>
+  <canvas id="cardzoom" width="223" height="312"></canvas>
+  <br/>
+  <div id="player2_txt">Player 2</div>
+  <canvas id="bottomHand" width="840" height="104" style="border:2px solid #000000;"></canvas>
+  <br/>
+  <button id="player2_draw" onclick=button_drawCard(deck2,hand2,2);>Draw card</button>
+  <button id="player2_shuffle" onclick=shuffle(deck2);>Shuffle Deck</button>
+  <button id="setup" onclick=setUpGame();>Set up game</button>
+  <button id="reset" onclick="window.location.reload(false)">Reset Everything</button>
+</body>
+</html>
