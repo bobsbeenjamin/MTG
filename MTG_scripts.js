@@ -71,6 +71,8 @@ cardZoom = null;
 text_player1 = null;
 text_player2 = null;
 
+// Set up the game once the page has loaded
+$(document).ready(setUpGame);
 
 /**
  * Links display variables to the DOM. Shuffles both decks. Displays both opening hands.
