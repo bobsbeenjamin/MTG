@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Draft you some MTG</title>
+  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="sets/AER.js"></script>
+  <script src="MTG_Draft_Scripts.js"></script>
+  <style>
+    h2 {text-decoration:underline;}
+  </style>
+</head>
+<body>
+  <h2>Your Card Pool</h2>
+  <canvas id="cardPool" width="832" height="104" style="border:2px solid #000000;">
+    Your browser does not support the HTML5 canvas protocol. Lame!
+  </canvas>
+  <canvas id="cardzoom" width="223" height="312" style="position:fixed;float:right;"></canvas>
+  <h2>Your Deck</h2>
+  <canvas id="deck" width="832" height="312" style="border:2px solid #000000;"></canvas>
+  <h2>Your Hand</h2>
+  <canvas id="bottomHand" width="832" height="104" style="border:2px solid #000000;"></canvas>
+  <br/>
+  <span id="player2_txt" width="832px"></span>
+  <br/>
+  <button id="player2_draw" onclick=button_drawCard(deck2,hand2,2);>Draw card</button>
+  <button id="player2_shuffle" onclick=shuffle(deck2);>Shuffle Deck</button>
+  <button id="test" onclick="testFunction();">Test</button>
+  <span id="status_txt">Status</span>
+</body>
+</html>

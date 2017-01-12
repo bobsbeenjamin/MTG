@@ -1,0 +1,38 @@
+{ 
+"mythicPool": [
+	{"name":"Exquisite Archangel", mvid:423685}, 
+	{"name":"Mechanized Production", mvid:423705}, 
+	{"name":"Herald of Anguish", mvid:423731}, 
+	{"name":"Indomitable Creativity", mvid:423752}, 
+	{"name":"Lightning Runner", mvid:423757}, 
+	{"name":"Aetherwind Basker", mvid:423771}
+	/* Needs more */
+], 
+"rarePool": [
+	{"name":"Aethergeode Miner", mvid:423671}, 
+	{"name":"Call for Unity", mvid:423676}, 
+	{"name":"Consulate Crackdown", mvid:423678}, 
+	{"name":"Solemn Recruit", mvid:423689}, 
+	{"name":"Sram, Senior Edificer", mvid:423690}, 
+	{"name":"Sram's Expertise", mvid:423691}
+	/* Needs more */
+], 
+"uncommonPool": [
+	{"name":"Aerial Modification", mvid:423668}, 
+	{"name":"Aeronaut Admiral", mvid:423669}, 
+	{"name":"Airdrop Aeronauts", mvid:423672}, 
+	{"name":"Deadeye Harpooner", mvid:423682}, 
+	{"name":"Deft Dismissal", mvid:423684}, 
+	{"name":"Felidar Guardian", mvid:423686}
+	/* Needs more */
+], 
+"commonPool": [
+	{"name":"Aether Inspector", mvid:423670}, 
+	{"name":"Alley Evasion", mvid:423673}, 
+	{"name":"Audacious Infiltrator", mvid:423674}, 
+	{"name":"Bastion Enforcer", mvid:423675}, 
+	{"name":"Caught in the Brights", mvid:423677}, 
+	{"name":"Conviction", mvid:423679}
+	/* Needs more */
+]
+}
