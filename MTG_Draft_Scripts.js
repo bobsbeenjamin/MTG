@@ -91,10 +91,18 @@ function createCardPool() {
 	low = 423668;
 	hi = 423850;
 	
-	// Read the cardPool of all possible cards
+	// Add the prerelease promo card (randomly selected rare or mythic)
 	var cardPool = AER;
-	// Create 6 packs from said card pool
-	for (var i=0; i<6; i++) {
+	var promoPool = cardPool.mythicPool.concat(cardPool.rarePool);
+	var promoCard = getIndividualCard(promoPool, "Promo");
+	cardPool1.push(promoCard);
+	// Create 4 packs from small set
+	for (var i=0; i<4; i++) {
+		cardPool1 = cardPool1.concat( createPack(cardPool) );
+	}
+	// Create 2 packs from large set
+	var cardPool = KLD;
+	for (var i=0; i<2; i++) {
 		cardPool1 = cardPool1.concat( createPack(cardPool) );
 	}
 }
@@ -120,25 +128,23 @@ function createPack(cardPool, isPromoPack=false) {
 	// Add the prerelease promo card, if applicable
 	if (isPromoPack) {
 		var promoPool = cardPool.mythicPool.concat(cardPool.rarePool);
-		var promoCard = getIndividualCard(promoPool);
-		promoCard.isPromoCard = true;
-		pack.push(promoCard);
+		pack.push( getIndividualCard(promoPool, "Promo") );
 	}
 	// Add a single rare
 	var rareIsMythic = Math.random() > 0.875;
 	if (rareIsMythic) {
-		pack.push( getIndividualCard(cardPool.mythicPool) );
+		pack.push( getIndividualCard(cardPool.mythicPool, "Mythic") );
 	} else {
-		pack.push( getIndividualCard(cardPool.rarePool) );
+		pack.push( getIndividualCard(cardPool.rarePool, "Rare") );
 	}
 	// Add 3 uncommons
 	for (var i=0; i<3; i++) {
-		pack.push( getIndividualCard(cardPool.uncommonPool) );
+		pack.push( getIndividualCard(cardPool.uncommonPool, "Uncommon") );
 	}
 	// Add 9-10 commons
 	var numCommons = isPromoPack ? 9 : 10;
 	for (var i=0; i<numCommons; i++) {
-		pack.push( getIndividualCard(cardPool.commonPool) );
+		pack.push( getIndividualCard(cardPool.commonPool, "Common") );
 	}
 	return pack;
 }
@@ -146,9 +152,11 @@ function createPack(cardPool, isPromoPack=false) {
 /**
  * Returns a single card from any arbitrary card pool.
  */
-function getIndividualCard(cardPool) {
+function getIndividualCard(cardPool, rarity) {
 	var card = cardPool[Math.floor(Math.random() * cardPool.length)];
-	return JSON.parse(JSON.stringify(card)); // copies element
+	card = JSON.parse(JSON.stringify(card)); // Create copy
+	card.rarity = rarity;
+	return card;
 }
 
 /**
@@ -253,7 +261,13 @@ function displayCard(card, drawSpace, leftBorder, topBorder) {
 	/*****  Then, display the card nicely using gatherer *****/
 	var cardImg = new Image();
 	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + card.mvid + "&type=card";
-	cardImg.onload = function() { drawSpace.drawImage(cardImg, leftBorder, topBorder, cardWidth, cardHeight); };
+	cardImg.onload = function() { 
+		drawSpace.drawImage(cardImg, leftBorder, topBorder, cardWidth, cardHeight);
+		if (card.rarity=="Promo") {
+			drawSpace.strokeStyle = "White";
+			drawSpace.strokeText("Promo Card", leftBorder+35, topBorder+75);
+		}
+	};
 }
 
 /**
@@ -316,12 +330,19 @@ function handleMouseHover(canvas, event, cardCollection) {
 	var card = cardCollection[cardIdx];
 	cardStr = JSON.stringify(card);
 	// Draw the card in the zoom box
-	cardZoom.clearRect(0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
-	cardZoom.strokeRect(0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
 	cardZoom.fillText(card.name, 3, 150);
 	var cardImg = new Image();
 	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + card.mvid + "&type=card";
-	cardImg.onload = function() { cardZoom.drawImage(cardImg, 0, 0, canvas_cardZoom.width, canvas_cardZoom.height); };
+	cardImg.onload = function() {
+		cardZoom.drawImage(cardImg, 0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
+		if (card.rarity=="Promo") {
+			var oldFont = cardZoom.font;
+			cardZoom.font = "20px Arial";
+			cardZoom.strokeStyle = "White";
+			cardZoom.strokeText("Promo Card", 95, 170);
+			cardzoom.font = oldFont;
+		}
+	};
 }
 
 /**
