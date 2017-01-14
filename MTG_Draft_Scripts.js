@@ -1,7 +1,14 @@
 /*
 TODOs: 
+	Store additional card info
+		Get color
+		Display below cardZoom
+	Allow user-defined sorting
+	Support 2HG
+	Add basic lands
+	Draw opening hands, etc
 Done: 
-Time: 8 hrs
+Time: 20 hrs
 Note: The seed of this page was my initial try at implementing Magic in a browser.
 */
 
@@ -9,6 +16,7 @@ Note: The seed of this page was my initial try at implementing Magic in a browse
 var hand1=[], hand2=[], deck2=[];
 var life1=0; life2=0;
 // Globals 
+var insertPos = 1;
 var cardPool1 = [];
 var deck1 = [];
 var status = "";
@@ -22,7 +30,12 @@ var cardPoolTop = null;
 var deck = null;
 var bottomHand = null;
 var cardZoom = null;
+var cardPoolFilter1 = null;
+var cardPoolFilter2 = null;
+var deck1Filter1 = null;
+var deck1Filter2 = null;
 var text_status = null;
+function isNumber(str) { return !isNaN(str) || str=='X'; }
 
 // Set up the game once the page has loaded
 $(document).ready(setUpGame);
@@ -57,12 +70,17 @@ function setUpGame() {
 	canvas_bottomHand = document.getElementById("bottomHand");
 	bottomHand = canvas_bottomHand.getContext("2d");
 	bottomHand.font = "10px Arial";
-	canvas_cardZoom = document.getElementById("cardzoom");
+	canvas_cardZoom = document.getElementById("cardZoom");
 	cardZoom = canvas_cardZoom.getContext("2d");
 	// Link text display variables to the DOM
 	text_player1 = document.getElementById("player1_txt");
 	text_player2 = document.getElementById("player2_txt");
 	text_status = document.getElementById("status_txt");
+	// Link dropdowns to the DOM
+	cardPoolFilter1 = document.getElementById("cardPoolFilter1");
+	cardPoolFilter2 = document.getElementById("cardPoolFilter2");
+	deck1Filter1 = document.getElementById("deck1Filter1");
+	deck1Filter2 = document.getElementById("deck1Filter2");
 	// Register mouse events
 	canvas_cardPoolTop.addEventListener("click", function(){ handleScreenClick(canvas_cardPoolTop, event, cardPool1, deck1); });
 	canvas_cardPoolTop.addEventListener("mousemove", function(){ handleMouseHover(canvas_cardPoolTop, event, cardPool1); });
@@ -94,7 +112,7 @@ function createCardPool() {
 	// Add the prerelease promo card (randomly selected rare or mythic)
 	var cardPool = AER;
 	var promoPool = cardPool.mythicPool.concat(cardPool.rarePool);
-	var promoCard = getIndividualCard(promoPool, "Promo");
+	var promoCard = getIndividualCard(promoPool, "Promo", insertPos);
 	cardPool1.push(promoCard);
 	// Create 4 packs from small set
 	for (var i=0; i<4; i++) {
@@ -108,16 +126,23 @@ function createCardPool() {
 }
 
 /**
- * Reads the desired card pool from a JSON file.
+ * Grabs the card pools from already-included .js files, and adds colors to the cards.
  */
-function readCardPool(setName) {
-	var cardPool = null;
+function readCardPools() {
+	var cardSets = [KLD, AER];
+	for (var set in cardSets) {
+		for (var card in set) {
+			card.color = getColor(card.manaCost);
+		}
+	}
+	// OLD CODE, BASED ON SETS BEING IN JSON FORMAT
+	/*var cardPool = null;
 	$.getJSON(
 		"sets/" + setName + ".json", 
 		function(json) { cardPool = json; }
 	);
 	//var cardPool = require("./sets/" + setName + ".json");
-	return cardPool;
+	return cardPool;*/
 }
 
 /**
@@ -128,23 +153,26 @@ function createPack(cardPool, isPromoPack=false) {
 	// Add the prerelease promo card, if applicable
 	if (isPromoPack) {
 		var promoPool = cardPool.mythicPool.concat(cardPool.rarePool);
-		pack.push( getIndividualCard(promoPool, "Promo") );
+		pack.push( getIndividualCard(promoPool, "Promo", insertPos) );
 	}
 	// Add a single rare
+	insertPos++;
 	var rareIsMythic = Math.random() > 0.875;
 	if (rareIsMythic) {
-		pack.push( getIndividualCard(cardPool.mythicPool, "Mythic") );
+		pack.push( getIndividualCard(cardPool.mythicPool, "Mythic", insertPos) );
 	} else {
-		pack.push( getIndividualCard(cardPool.rarePool, "Rare") );
+		pack.push( getIndividualCard(cardPool.rarePool, "Rare", insertPos) );
 	}
 	// Add 3 uncommons
 	for (var i=0; i<3; i++) {
-		pack.push( getIndividualCard(cardPool.uncommonPool, "Uncommon") );
+		insertPos++;
+		pack.push( getIndividualCard(cardPool.uncommonPool, "Uncommon", insertPos) );
 	}
 	// Add 9-10 commons
 	var numCommons = isPromoPack ? 9 : 10;
 	for (var i=0; i<numCommons; i++) {
-		pack.push( getIndividualCard(cardPool.commonPool, "Common") );
+		insertPos++;
+		pack.push( getIndividualCard(cardPool.commonPool, "Common", insertPos) );
 	}
 	return pack;
 }
@@ -152,10 +180,12 @@ function createPack(cardPool, isPromoPack=false) {
 /**
  * Returns a single card from any arbitrary card pool.
  */
-function getIndividualCard(cardPool, rarity) {
+function getIndividualCard(cardPool, rarity, insertPos) {
 	var card = cardPool[Math.floor(Math.random() * cardPool.length)];
 	card = JSON.parse(JSON.stringify(card)); // Create copy
 	card.rarity = rarity;
+	card.color = getColor(card.manaCost);
+	card.packOpenOrder = insertPos;
 	return card;
 }
 
@@ -172,6 +202,48 @@ function drawCardFromLibrary(deck, hand, player) {
 	}
 	else
 		hand.push(deck.pop());
+}
+
+/**
+ * Displays all cards in cardPool and defines cardArea for each card displayed.
+ */
+function displayCardPool() {
+	// Recalculate canvas size
+	var numRows = Math.floor(cardPool1.length / 8) + 1;
+	canvas_cardPoolTop.height = (cardHeight + 4) * numRows + 2;
+	// Clear canvas
+	cardPoolTop.clearRect(0, 0, canvas_cardPoolTop.width, canvas_cardPoolTop.height);
+	// Display cardPoolTop
+	var row = -1;
+	for (var card=0; card<cardPool1.length; card++) {
+		if (card%8 == 0)
+			row++;
+		var leftBorder = (cardWidth + 4) * (card%8) + 2;
+		var topBorder = (cardHeight + 4) * row + 2;
+		cardPool1[card].cardArea = getCardArea(leftBorder, topBorder);
+		displayCard(cardPool1[card], cardPoolTop, leftBorder, topBorder);
+	}
+}
+
+/**
+ * Displays all cards in deck1 and defines cardArea for each card displayed.
+ */
+function displayDeck1() {
+	// Recalculate canvas size
+	var numRows = Math.floor(deck1.length / 8) + 1;
+	canvas_deck.height = (cardHeight + 4) * numRows + 2;
+	// Clear canvas
+	deck.clearRect(0, 0, canvas_deck.width, canvas_deck.height);
+	// Display deck1
+	row = -1;
+	for (var card=0; card<deck1.length; card++) {
+		if (card%8 == 0)
+			row++;
+		var leftBorder = (cardWidth + 4) * (card%8) + 2;
+		var topBorder = (cardHeight + 4) * row + 2;
+		deck1[card].cardArea = getCardArea(leftBorder, topBorder);
+		displayCard(deck1[card], deck, leftBorder, topBorder);
+	}
 }
 
 /**
@@ -263,7 +335,7 @@ function displayCard(card, drawSpace, leftBorder, topBorder) {
 	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + card.mvid + "&type=card";
 	cardImg.onload = function() { 
 		drawSpace.drawImage(cardImg, leftBorder, topBorder, cardWidth, cardHeight);
-		if (card.rarity=="Promo") {
+		if (card.rarity == "Promo") {
 			drawSpace.strokeStyle = "White";
 			drawSpace.strokeText("Promo Card", leftBorder+35, topBorder+75);
 		}
@@ -289,6 +361,83 @@ function shuffle(deck) {
 /**********************************/
 /*******   Event Handling   *******/
 /**********************************/
+
+/**
+ * Sorts a collection and redraws it on canvas (ie, cardPool and deck1 are collections).
+ */
+function sortCards(canvasStr) {
+	// Note: In my first attempt at this, I sorted the array twice, instead of having 
+	// 2 sort properties per card.
+	if (canvasStr == "cardPool") {
+		//cardPool1.forEach(getSortVal(sortVal), card);
+		var sortVal = cardPoolFilter1.value;
+		cardPool1.forEach(function(card) { card.sort1 = getSortVal(card, sortVal); });
+		var sortVal = cardPoolFilter2.value;
+		cardPool1.forEach(function(card) { card.sort2 = getSortVal(card, sortVal); });
+		cardPool1.sort(function(card1, card2){ return compareCards(card1, card2); });
+		//cardPool1.sort(function(card1, card2){ return card1.color.localeCompare(card2.color); });
+		displayCardPool();
+	}
+	if (canvasStr == "deck1") {
+		var sortVal = deck1Filter1.value;
+		deck1.forEach(function(card) { card.sort1 = getSortVal(card, sortVal); });
+		var sortVal = deck1Filter2.value;
+		deck1.forEach(function(card) { card.sort2 = getSortVal(card, sortVal); });
+		deck1.sort(function(card1, card2){ return compareCards(card1, card2); });
+		displayDeck1();
+	}
+}
+
+/**
+ * Sets the sort property for a card. sortVal is a string pulled from a DOM dropdown, 
+ * and the card set to "this".
+ * NOTE: This is a helper for the sortCards function.
+ */
+function getSortVal(card, sortVal) {
+	if (sortVal == "color") {
+		var colorSortDict = {"C":1, "W":2, "U":3, "B":4, "R":5, "G":6, "M":7};
+		return colorSortDict[card.color];
+	}
+	if (sortVal == "cmc") {
+		return card.cmc;
+	}
+	if (sortVal == "types") {
+		var typeLine = card.types;
+		if (typeLine.includes("Legendary"))
+			typeLine = typeLine.slice(10);
+		if (typeLine.includes("Creature")) {
+			if (typeLine.includes("Artifact"))
+				typeLine = "Artifact Creature";
+			else
+				typeLine = "Creature";
+		}
+		return typeLine;
+	}
+	if (sortVal == "rarity") {
+		var raritySortDict = {"Promo":1, "Mythic":1, "Rare":2, "Uncommon":3, "Common":4};
+		return raritySortDict[card.rarity];
+	}
+}
+
+/**
+ * Compares 2 cards.
+ * NOTE: This is a helper for the sortCards function.
+ */
+function compareCards(card1, card2) {
+	//return card1.color.localeCompare(card2.color);
+	var comparison = 0;
+	if (typeof(card1.sort1) == "string")
+		comparison = card1.sort1.localeCompare(card2.sort1);
+	else
+		comparison = card1.sort1 - card2.sort1;
+	if (comparison == 0) { // The first sort compared equal
+		if (typeof(card1.sort2) == "string")
+			comparison = card1.sort2.localeCompare(card2.sort2);
+		else
+			comparison = card1.sort2 - card2.sort2;
+	}
+	return comparison;
+}
 
 /**
  * Draws a card from the appropriate deck, then redraws everything.
@@ -335,12 +484,12 @@ function handleMouseHover(canvas, event, cardCollection) {
 	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + card.mvid + "&type=card";
 	cardImg.onload = function() {
 		cardZoom.drawImage(cardImg, 0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
-		if (card.rarity=="Promo") {
+		if (card.rarity == "Promo") {
 			var oldFont = cardZoom.font;
 			cardZoom.font = "20px Arial";
 			cardZoom.strokeStyle = "White";
 			cardZoom.strokeText("Promo Card", 95, 170);
-			cardzoom.font = oldFont;
+			cardZoom.font = oldFont;
 		}
 	};
 }
@@ -429,6 +578,48 @@ function loseGame(player) {
 	$("#player1_shuffle").remove();
 	$("#player2_draw").remove();
 	$("#player2_shuffle").remove();
+}
+
+/**
+ * Returns an object's color, based on it's mana cost.
+ * @param String manaCost
+ * @return String color
+ */
+function getColor(manaCost) {
+	// Reverse string, in order to process it right-to-left more intuitively
+	manaCost = manaCost.split("").reverse().join("");
+	var color = manaCost[0];
+	if (isNumber(color)) { 
+		// 1st char is a number, so return colorless
+		return "C";
+	}
+	else {
+		if ( manaCost.length == 1 || isNumber(manaCost[1]) || color==manaCost[1] )
+			return color;
+		else 
+			return "M";
+	}
+}
+
+/**
+ * Returns the full name of a color, given a one-character color indicator.
+ * NOTE: This should probably be re-implemented as an object.
+ * @param String color A single-character color indicator (ie, 'G' -> "Green")
+ * @return String fullColor The full color name associated with the given color indicator
+ */
+function getFullColor(color) {
+	switch (color) {
+		// There is no need to break after each case, because they all return
+		case "C" : return "Colorless";
+		case "W" : return "White";
+		case "U" : return "Blue";
+		case "B" : return "Black";
+		case "R" : return "Red";
+		case "G" : return "Green";
+		case "M" : return "Multicolor";
+		case "H" : return "Hybrid";
+		default  : return "(No color information)";
+	}
 }
 
 /**

@@ -7,24 +7,64 @@
   <script src="sets/KLD.js"></script>
   <script src="MTG_Draft_Scripts.js"></script>
   <style>
-    h2 {text-decoration:underline;}
+    h2 {
+	  text-decoration: underline;
+	  padding: 2px;
+	  line-height: 0pt;
+	}
+	h4 {
+	  line-height: 0pt;
+	}
   </style>
 </head>
 <body>
   <h2>Your Card Pool</h2>
+  <h4>The cards default to sort in pack order. Use the dropdowns to create your own sort.</h4>
+  <select id="cardPoolFilter1"> <!-- onchange="sortCards(cardPool);"> -->
+    <option value=""></option>
+    <option value="color">Color</option>
+    <option value="cmc">CMC</option>
+    <option value="types">Card Types</option>
+    <option value="rarity">Rarity</option>
+  </select>
+  <select id="cardPoolFilter2">
+    <option value=""></option>
+    <option value="color">Color</option>
+    <option value="cmc">CMC</option>
+    <option value="types">Card Types</option>
+    <option value="rarity">Rarity</option>
+  </select>
+  <button id="button_cardPoolFilter" onclick="sortCards('cardPool');">Sort</button>
+  <br/>
   <canvas id="cardPool" width="832" height="104" style="border:2px solid #000000;">
     Your browser does not support the HTML5 canvas protocol. Lame!
   </canvas>
-  <canvas id="cardzoom" width="223" height="312" style="position:fixed;float:right;"></canvas>
+  <canvas id="cardZoom" width="223" height="312" style="position:fixed;float:right;"></canvas>
   <h2>Your Deck</h2>
+  <select id="deck1Filter1">
+    <option value=""></option>
+    <option value="color">Color</option>
+    <option value="cmc">CMC</option>
+    <option value="types">Card Types</option>
+    <option value="rarity">Rarity</option>
+  </select>
+  <select id="deck1Filter2">
+    <option value=""></option>
+    <option value="color">Color</option>
+    <option value="cmc">CMC</option>
+    <option value="types">Card Types</option>
+    <option value="rarity">Rarity</option>
+  </select>
+  <button id="button_deck1Filter" onclick="sortCards('deck1');">Sort</button>
+  <br/>
   <canvas id="deck" width="832" height="312" style="border:2px solid #000000;"></canvas>
   <h2>Your Hand</h2>
   <canvas id="bottomHand" width="832" height="104" style="border:2px solid #000000;"></canvas>
   <br/>
   <span id="player2_txt" width="832px"></span>
   <br/>
-  <button id="player2_draw" onclick=button_drawCard(deck2,hand2,2);>Draw card</button>
-  <button id="player2_shuffle" onclick=shuffle(deck2);>Shuffle Deck</button>
+  <button id="player2_draw" onclick="button_drawCard(deck2,hand2,2);">Draw card</button>
+  <button id="player2_shuffle" onclick="shuffle(deck2);">Shuffle Deck</button>
   <button id="test" onclick="testFunction();">Test</button>
   <span id="status_txt">Status</span>
 </body>
