@@ -586,6 +586,9 @@ function loseGame(player) {
  * @return String color
  */
 function getColor(manaCost) {
+	// Handle lands
+	if (manaCost.length == 0)
+		return "C";
 	// Reverse string, in order to process it right-to-left more intuitively
 	manaCost = manaCost.split("").reverse().join("");
 	var color = manaCost[0];
