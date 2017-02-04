@@ -1,13 +1,18 @@
 /*
 TODOs: 
 	Store additional card info
-		Get color
 		Display below cardZoom
 	Allow user-defined sorting
+		Fix alphabetical sort
+		Add groupings
 	Support 2HG
 	Add basic lands
 	Draw opening hands, etc
+	Why does page sometime give "Wait" prompt?
 Done: 
+	Store additional card info
+		Get color
+	Allow user-defined sorting
 Time: 20 hrs
 Note: The seed of this page was my initial try at implementing Magic in a browser.
 */
@@ -119,7 +124,7 @@ function createCardPool() {
 		cardPool1 = cardPool1.concat( createPack(cardPool) );
 	}
 	// Create 2 packs from large set
-	var cardPool = KLD;
+	cardPool = KLD;
 	for (var i=0; i<2; i++) {
 		cardPool1 = cardPool1.concat( createPack(cardPool) );
 	}
@@ -205,45 +210,46 @@ function drawCardFromLibrary(deck, hand, player) {
 }
 
 /**
- * Displays all cards in cardPool and defines cardArea for each card displayed.
+ * Displays all cards in collection and defines cardArea for each card displayed.
  */
-function displayCardPool() {
+function displayOneCanvas(canvas, context, collection) {
 	// Recalculate canvas size
-	var numRows = Math.floor(cardPool1.length / 8) + 1;
-	canvas_cardPoolTop.height = (cardHeight + 4) * numRows + 2;
+	var numRows = Math.floor(collection.length / 8) + 1;
+	canvas.height = (cardHeight + 4) * numRows + 2;
 	// Clear canvas
-	cardPoolTop.clearRect(0, 0, canvas_cardPoolTop.width, canvas_cardPoolTop.height);
-	// Display cardPoolTop
+	context.clearRect(0, 0, canvas.width, canvas.height);
+	// Display collection
 	var row = -1;
-	for (var card=0; card<cardPool1.length; card++) {
+	for (var card=0; card<collection.length; card++) {
 		if (card%8 == 0)
 			row++;
 		var leftBorder = (cardWidth + 4) * (card%8) + 2;
 		var topBorder = (cardHeight + 4) * row + 2;
-		cardPool1[card].cardArea = getCardArea(leftBorder, topBorder);
-		displayCard(cardPool1[card], cardPoolTop, leftBorder, topBorder);
+		collection[card].cardArea = getCardArea(leftBorder, topBorder);
+		displayCard(collection[card], context, leftBorder, topBorder);
 	}
+}
+
+/**
+ * Displays all cards in cardPool and defines cardArea for each card displayed.
+ */
+function displayCardPool() {
+	displayOneCanvas(canvas_cardPoolTop, cardPoolTop, cardPool1);
 }
 
 /**
  * Displays all cards in deck1 and defines cardArea for each card displayed.
  */
 function displayDeck1() {
-	// Recalculate canvas size
-	var numRows = Math.floor(deck1.length / 8) + 1;
-	canvas_deck.height = (cardHeight + 4) * numRows + 2;
-	// Clear canvas
-	deck.clearRect(0, 0, canvas_deck.width, canvas_deck.height);
-	// Display deck1
-	row = -1;
-	for (var card=0; card<deck1.length; card++) {
-		if (card%8 == 0)
-			row++;
-		var leftBorder = (cardWidth + 4) * (card%8) + 2;
-		var topBorder = (cardHeight + 4) * row + 2;
-		deck1[card].cardArea = getCardArea(leftBorder, topBorder);
-		displayCard(deck1[card], deck, leftBorder, topBorder);
-	}
+	displayOneCanvas(canvas_deck, deck, deck1);
+}
+
+/**
+ * Displays all cards in hand1 and defines cardArea for each card displayed.
+ */
+function displayHand1() {
+	displayOneCanvas(canvas_bottomHand, bottomHand, hand1);
+	updatePlayerInfo(1);
 }
 
 /**
@@ -279,13 +285,6 @@ function displayEverything() {
 		var topBorder = (cardHeight + 4) * row + 2;
 		deck1[card].cardArea = getCardArea(leftBorder, topBorder);
 		displayCard(deck1[card], deck, leftBorder, topBorder);
-	}
-	// Display bottomHand
-	for (var card=0; card<hand2.length; card++) {
-		var leftBorder = 103 * card + 2;
-		var topBorder = 2;
-		hand2[card].cardArea = getCardArea(leftBorder, topBorder);
-		displayCard(hand2[card], bottomHand, leftBorder, topBorder);
 	}
 }
 
@@ -402,9 +401,10 @@ function getSortVal(card, sortVal) {
 		return card.cmc;
 	}
 	if (sortVal == "types") {
+		// Modify type line to sort more like players would want
 		var typeLine = card.types;
 		if (typeLine.includes("Legendary"))
-			typeLine = typeLine.slice(10);
+			typeLine = typeLine.slice(10); // slice off "Legendary" from front
 		if (typeLine.includes("Creature")) {
 			if (typeLine.includes("Artifact"))
 				typeLine = "Artifact Creature";
@@ -414,7 +414,7 @@ function getSortVal(card, sortVal) {
 		return typeLine;
 	}
 	if (sortVal == "rarity") {
-		var raritySortDict = {"Promo":1, "Mythic":1, "Rare":2, "Uncommon":3, "Common":4};
+		var raritySortDict = {"Promo":1, "Mythic":1, "Rare":2, "Uncommon":3, "Common":4, "BasicLand":5};
 		return raritySortDict[card.rarity];
 	}
 }
@@ -436,6 +436,10 @@ function compareCards(card1, card2) {
 		else
 			comparison = card1.sort2 - card2.sort2;
 	}
+	// Sort cards alphabetically, after all other sorts
+	if (comparison == 0) { // The cards still sort completely the same
+		comparison = card1.name.localeCompare(card2.name);
+	}
 	return comparison;
 }
 
@@ -444,7 +448,7 @@ function compareCards(card1, card2) {
  */
 function button_drawCard(deck, hand, player) {
 	drawCardFromLibrary(deck, hand, player);
-	displayEverything();
+	displayHand1();
 }
 
 /**
@@ -537,6 +541,69 @@ function updatePlayerInfo(player=null) {
 }
 
 /**
+ * Shows adds 8 of each basic land to cardPool, then redraws cardPool.
+ */
+function showLands() {
+	$("#show_lands").remove();
+	var lands = [];
+	for (landType=0; landType<BasicLands.length; landType++) {
+		// Make a 1-element array with this land type, for getIndividualCard to consume
+		var thisLandType = [BasicLands[landType]];
+		for (var i=0; i<8; i++) {
+			insertPos++;
+			lands.push( getIndividualCard(thisLandType, "BasicLand", insertPos) );
+		}
+	}
+	cardPool1 = cardPool1.concat(lands);
+	displayCardPool();
+}
+
+/**
+ * Shows the hidden hand elements, and displays a 7 card opener.
+ */
+function showHand() {
+	$(".hand").show();
+	var button_showHand = document.getElementById("show_hand");
+	button_showHand.innerHTML = "Modify Deck";
+	button_showHand.onclick = function(){modifyDeck();};
+	$(".deck").hide();
+	shuffle(deck1);
+	drawOpeningHands();
+	displayHand1();
+}
+
+/**
+ * Returns the user from the hand display feature to the deck building feature.
+ */
+function modifyDeck() {
+	$(".hand").hide();
+	var button_showHand = document.getElementById("show_hand");
+	button_showHand.innerHTML = "Show Hand";
+	button_showHand.onclick = function(){showHand();};
+	$(".deck").show();
+}
+
+/**
+ * Draws the top 7 cards of each deck by calling drawCardFromLibrary() 7 times for each 
+ * deck / hand.
+ * NOTE: This is a helper for the showHand function.
+ */
+function drawOpeningHands() {
+	if(deck1.length > 6) {
+		for (var i=0; i<7; i++) {
+			drawCardFromLibrary(deck1, hand1, 1);
+		}
+	}
+	else
+		alert("Warning: Deck 1 has less than 7 cards.");
+	if(deck2.length > 6) {
+		for (var i=0; i<7; i++) {
+			drawCardFromLibrary(deck2, hand2, 2);
+		}
+	}
+}
+
+/**
  * Updates the current status message. If overWrite is true (or not passed), then status 
  * is replaced with newStatus. Otherwise, newStatus is appended to the end of status.
  * @param newStatus The new status to display
@@ -565,19 +632,6 @@ function getPointerPositionOnCanvas(canvas, event) {
     var xPos = event.clientX - boundingRect.left;
     var yPos = event.clientY - boundingRect.top;
     return {x:xPos, y:yPos};
-}
-
-/**
- * Displays a lose message for the given player. Removes all action buttons (to prevent 
- * weird game states).
- * @param var player The player who lost (a number)
- */
-function loseGame(player) {
-    alert("Player " + player.toString() + " has lost the game!");
-	$("#player1_draw").remove();
-	$("#player1_shuffle").remove();
-	$("#player2_draw").remove();
-	$("#player2_shuffle").remove();
 }
 
 /**

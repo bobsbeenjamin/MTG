@@ -5,6 +5,7 @@
   <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
   <script src="sets/AER.js"></script>
   <script src="sets/KLD.js"></script>
+  <script src="sets/BasicLands.js"></script>
   <script src="MTG_Draft_Scripts.js"></script>
   <style>
     h2 {
@@ -14,6 +15,9 @@
 	}
 	h4 {
 	  line-height: 0pt;
+	}
+	.hand {
+	  display: None;
 	}
   </style>
 </head>
@@ -40,31 +44,34 @@
     Your browser does not support the HTML5 canvas protocol. Lame!
   </canvas>
   <canvas id="cardZoom" width="223" height="312" style="position:fixed;float:right;"></canvas>
-  <h2>Your Deck</h2>
-  <select id="deck1Filter1">
+  <h2 class="deck">Your Deck</h2>
+  <select id="deck1Filter1" class="deck">
     <option value=""></option>
     <option value="color">Color</option>
     <option value="cmc">CMC</option>
     <option value="types">Card Types</option>
     <option value="rarity">Rarity</option>
   </select>
-  <select id="deck1Filter2">
+  <select id="deck1Filter2" class="deck">
     <option value=""></option>
     <option value="color">Color</option>
     <option value="cmc">CMC</option>
     <option value="types">Card Types</option>
     <option value="rarity">Rarity</option>
   </select>
-  <button id="button_deck1Filter" onclick="sortCards('deck1');">Sort</button>
+  <button id="button_deck1Filter" class="deck" onclick="sortCards('deck1');">Sort</button>
   <br/>
-  <canvas id="deck" width="832" height="312" style="border:2px solid #000000;"></canvas>
-  <h2>Your Hand</h2>
-  <canvas id="bottomHand" width="832" height="104" style="border:2px solid #000000;"></canvas>
+  <canvas id="deck" class="deck" width="832" height="312" style="border:2px solid #000000;"></canvas>
   <br/>
-  <span id="player2_txt" width="832px"></span>
+  <button id="show_lands" onclick="showLands();">Show Basic Lands</button>
+  <button id="show_hand" onclick="showHand();">Try deck!</button>
+  <h2 class="hand">Your Hand</h2>
+  <canvas id="bottomHand" class="hand" width="832" height="104" style="border:2px solid #000000;"></canvas>
   <br/>
-  <button id="player2_draw" onclick="button_drawCard(deck2,hand2,2);">Draw card</button>
-  <button id="player2_shuffle" onclick="shuffle(deck2);">Shuffle Deck</button>
+  <span id="player1_txt" class="hand" width="832px"></span>
+  <br/>
+  <button id="player1_draw" class="hand" onclick="button_drawCard(deck1,hand1,1);">Draw card</button>
+  <button id="player1_shuffle" class="hand" onclick="shuffle(deck1);">Shuffle Deck</button>
   <button id="test" onclick="testFunction();">Test</button>
   <span id="status_txt">Status</span>
 </body>
