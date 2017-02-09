@@ -70,8 +70,11 @@
   <br/>
   <span id="player1_txt" class="hand" width="832px"></span>
   <br/>
-  <button id="player1_draw" class="hand" onclick="button_drawCard(deck1,hand1,1);">Draw card</button>
+  <button id="player1_draw" class="hand" onclick="button_drawCard(deck1,hand1,1);">Draw a Card</button>
+  <button id="player1_mull" class="hand" onclick="newHand(1,true);">Mulligan</button>
+  <button id="player1_newHand" class="hand" onclick="newHand(1);">Draw New Hand</button>
   <button id="player1_shuffle" class="hand" onclick="shuffle(deck1);">Shuffle Deck</button>
+  <br/>
   <button id="test" onclick="testFunction();">Test</button>
   <span id="status_txt">Status</span>
 </body>

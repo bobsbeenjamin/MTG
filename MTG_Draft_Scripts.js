@@ -3,27 +3,35 @@ TODOs:
 	Store additional card info
 		Display below cardZoom
 	Allow user-defined sorting
-		Fix alphabetical sort
+		Fix alphabetical sort (only works with 2 sort options)
 		Add groupings
 	Support 2HG
-	Add basic lands
-	Draw opening hands, etc
+	Hand similator
+		Add mulligan button
 	Why does page sometime give "Wait" prompt?
 Done: 
 	Store additional card info
 		Get color
 	Allow user-defined sorting
+	Hand similator
+		Add basic lands
+		Draw opening hands
+		Don't keep cards in hand when modifying deck
+		Display cardpool correctly after viewing hand
 Time: 20 hrs
 Note: The seed of this page was my initial try at implementing Magic in a browser.
 */
 
 // UNUSED
-var hand1=[], hand2=[], deck2=[];
+var hand2=[], deck2=[];
 var life1=0; life2=0;
 // Globals 
 var insertPos = 1;
 var cardPool1 = [];
 var deck1 = [];
+var deck1_Cache = [];
+var hand1 = [];
+var mulliganVal1 = 7;
 var status = "";
 var cardWidth = 100;
 var cardHeight = 140;
@@ -567,6 +575,7 @@ function showHand() {
 	button_showHand.innerHTML = "Modify Deck";
 	button_showHand.onclick = function(){modifyDeck();};
 	$(".deck").hide();
+	deck1_Cache = deck1.slice(); // Store copy for later
 	shuffle(deck1);
 	drawOpeningHands();
 	displayHand1();
@@ -580,7 +589,26 @@ function modifyDeck() {
 	var button_showHand = document.getElementById("show_hand");
 	button_showHand.innerHTML = "Show Hand";
 	button_showHand.onclick = function(){showHand();};
+	deck1 = deck1.concat(hand1);
+	// deck1_Cache should evaluate true under normal circumstances; I'm being defensive
+	if (deck1_Cache)
+		deck1 = deck1_Cache;
+	hand1 = [];
 	$(".deck").show();
+	displayCardPool();
+}
+
+/**
+ * Shuffles hand back into deck, then displays a 7 card opener.
+ */
+function newHand(player, mulligan=false) {
+	if (player==1) {
+		deck1 = deck1.concat(hand1);
+		hand1 = [];
+		shuffle(deck1);
+		drawOpeningHands(mulligan);
+		displayHand1();
+	}
 }
 
 /**
@@ -588,19 +616,25 @@ function modifyDeck() {
  * deck / hand.
  * NOTE: This is a helper for the showHand function.
  */
-function drawOpeningHands() {
-	if(deck1.length > 6) {
-		for (var i=0; i<7; i++) {
+function drawOpeningHands(mulligan=false) {
+	if (mulligan)
+		mulliganVal1--;
+	else
+		mulliganVal1 = 7;
+	if(deck1.length >= mulliganVal1) {
+		for (var i=0; i<mulliganVal1; i++) {
 			drawCardFromLibrary(deck1, hand1, 1);
 		}
 	}
 	else
-		alert("Warning: Deck 1 has less than 7 cards.");
+		alert("Warning: Deck 1 has too few cards for an opening hand.");
 	if(deck2.length > 6) {
 		for (var i=0; i<7; i++) {
 			drawCardFromLibrary(deck2, hand2, 2);
 		}
 	}
+	// else
+		// alert("Warning: Deck 2 has too few cards for an opening hand.");
 }
 
 /**
