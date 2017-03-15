@@ -1,14 +1,15 @@
 /*
 TODOs: 
+	Change verbiage from draft to sealed
 	Store additional card info
 		Display below cardZoom
 	Allow user-defined sorting
 		Fix alphabetical sort (only works with 2 sort options)
 		Add groupings
 	Support 2HG
-	Hand similator
-		Add mulligan button
-	Why does page sometime give "Wait" prompt?
+	Deckbuilding stats
+		Display updated stats live
+		Card count, Mana curve, Color info
 Done: 
 	Store additional card info
 		Get color
@@ -18,8 +19,11 @@ Done:
 		Draw opening hands
 		Don't keep cards in hand when modifying deck
 		Display cardpool correctly after viewing hand
-Time: 20 hrs
-Note: The seed of this page was my initial try at implementing Magic in a browser.
+		Add mulligan button
+		Add "Draw New Hand" button
+	Why does page sometime give "Wait" prompt? (This went away by itself)
+Time: 40 hrs
+Note: The seed of this project was my initial attempt at implementing Magic (the game) in a browser.
 */
 
 // UNUSED

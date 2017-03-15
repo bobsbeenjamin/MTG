@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Draft you some MTG</title>
+  <title>A Sealed Deck Generator</title>
   <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
   <script src="sets/AER.js"></script>
   <script src="sets/KLD.js"></script>
@@ -17,13 +17,13 @@
 	  line-height: 0pt;
 	}
 	.hand {
-	  display: None;
+	  display: None; /* This class starts hidden, but is unhidden later */
 	}
   </style>
 </head>
 <body>
   <h2>Your Card Pool</h2>
-  <h4>The cards default to sort in pack order. Use the dropdowns to create your own sort.</h4>
+  <h4>By default, your card pool is displayed in the order that you would open packs. Use the dropdowns to create your own sort.</h4>
   <select id="cardPoolFilter1"> <!-- onchange="sortCards(cardPool);"> -->
     <option value=""></option>
     <option value="color">Color</option>
