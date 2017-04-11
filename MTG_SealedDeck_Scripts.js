@@ -1,15 +1,18 @@
 /*
 TODOs: 
-	Change verbiage from draft to sealed
-	Store additional card info
-		Display below cardZoom
 	Allow user-defined sorting
 		Fix alphabetical sort (only works with 2 sort options)
 		Add groupings
+		Link options (make selection from sort 1 modify options for sort 2)
 	Support 2HG
 	Deckbuilding stats
 		Display updated stats live
 		Card count, Mana curve, Color info
+	Store additional card info
+		Display below cardZoom
+	Mobile support
+		Card popup on long press
+		Adapt card size and canvas size for card pool and deck
 Done: 
 	Store additional card info
 		Get color
@@ -22,13 +25,13 @@ Done:
 		Add mulligan button
 		Add "Draw New Hand" button
 	Why does page sometime give "Wait" prompt? (This went away by itself)
-Time: 40 hrs
+	Change verbiage from draft to sealed
+Time: 80 hrs
 Note: The seed of this project was my initial attempt at implementing Magic (the game) in a browser.
 */
 
 // UNUSED
 var hand2=[], deck2=[];
-var life1=0; life2=0;
 // Globals 
 var insertPos = 1;
 var cardPool1 = [];
@@ -52,6 +55,7 @@ var cardPoolFilter2 = null;
 var deck1Filter1 = null;
 var deck1Filter2 = null;
 var text_status = null;
+// Handy definition
 function isNumber(str) { return !isNaN(str) || str=='X'; }
 
 // Set up the game once the page has loaded
@@ -122,10 +126,6 @@ function setUpGame() {
  * Fills the cardPool variables (currently cardPool1).
  */
 function createCardPool() {
-	// Currently unused
-	low = 423668;
-	hi = 423850;
-	
 	// Add the prerelease promo card (randomly selected rare or mythic)
 	var cardPool = AER;
 	var promoPool = cardPool.mythicPool.concat(cardPool.rarePool);
@@ -144,6 +144,7 @@ function createCardPool() {
 
 /**
  * Grabs the card pools from already-included .js files, and adds colors to the cards.
+ * [CURRENTLY UNUSED]
  */
 function readCardPools() {
 	var cardSets = [KLD, AER];
@@ -152,14 +153,7 @@ function readCardPools() {
 			card.color = getColor(card.manaCost);
 		}
 	}
-	// OLD CODE, BASED ON SETS BEING IN JSON FORMAT
-	/*var cardPool = null;
-	$.getJSON(
-		"sets/" + setName + ".json", 
-		function(json) { cardPool = json; }
-	);
-	//var cardPool = require("./sets/" + setName + ".json");
-	return cardPool;*/
+	return cardSets;
 }
 
 /**
@@ -226,7 +220,9 @@ function drawCardFromLibrary(deck, hand, player) {
  */
 function displayOneCanvas(canvas, context, collection) {
 	// Recalculate canvas size
-	var numRows = Math.floor(collection.length / 8) + 1;
+	var numRows = Math.ceil(collection.length / 8);
+	// Make sure that an empty row is displayed for an empty collection
+	numRows = (numRows == 0) ? 1 : numRows;
 	canvas.height = (cardHeight + 4) * numRows + 2;
 	// Clear canvas
 	context.clearRect(0, 0, canvas.width, canvas.height);
@@ -269,35 +265,12 @@ function displayHand1() {
  * cardArea for each card displayed. Also updates playerInfo for each player.
  */
 function displayEverything() {
-	// Recalculate canvas sizes
-	var numRows = Math.floor(cardPool1.length / 8) + 1;
-	canvas_cardPoolTop.height = (cardHeight + 4) * numRows + 2;
-	numRows = Math.floor(deck1.length / 8) + 1;
-	canvas_deck.height = (cardHeight + 4) * numRows + 2;
-	// Clear everything
-	cardPoolTop.clearRect(0, 0, canvas_cardPoolTop.width, canvas_cardPoolTop.height);
-	deck.clearRect(0, 0, canvas_deck.width, canvas_deck.height);
-	bottomHand.clearRect(0, 0, canvas_bottomHand.width, canvas_bottomHand.height);
-	// Display cardPoolTop
-	var row = -1;
-	for (var card=0; card<cardPool1.length; card++) {
-		if (card%8 == 0)
-			row++;
-		var leftBorder = (cardWidth + 4) * (card%8) + 2;
-		var topBorder = (cardHeight + 4) * row + 2;
-		cardPool1[card].cardArea = getCardArea(leftBorder, topBorder);
-		displayCard(cardPool1[card], cardPoolTop, leftBorder, topBorder);
-	}
-	// Display deck1
-	row = -1;
-	for (var card=0; card<deck1.length; card++) {
-		if (card%8 == 0)
-			row++;
-		var leftBorder = (cardWidth + 4) * (card%8) + 2;
-		var topBorder = (cardHeight + 4) * row + 2;
-		deck1[card].cardArea = getCardArea(leftBorder, topBorder);
-		displayCard(deck1[card], deck, leftBorder, topBorder);
-	}
+	displayCardPool();
+	var button_showHand = document.getElementById("show_hand");
+	if (button_showHand.innerHTML == "Modify Deck")
+		displayHand1()
+	else
+		displayDeck1();
 }
 
 /**
@@ -347,8 +320,10 @@ function displayCard(card, drawSpace, leftBorder, topBorder) {
 	cardImg.onload = function() { 
 		drawSpace.drawImage(cardImg, leftBorder, topBorder, cardWidth, cardHeight);
 		if (card.rarity == "Promo") {
+			var strokeStyle = drawSpace.strokeStyle;
 			drawSpace.strokeStyle = "White";
 			drawSpace.strokeText("Promo Card", leftBorder+35, topBorder+75);
+			drawSpace.strokeStyle = strokeStyle;
 		}
 	};
 }
@@ -386,7 +361,6 @@ function sortCards(canvasStr) {
 		var sortVal = cardPoolFilter2.value;
 		cardPool1.forEach(function(card) { card.sort2 = getSortVal(card, sortVal); });
 		cardPool1.sort(function(card1, card2){ return compareCards(card1, card2); });
-		//cardPool1.sort(function(card1, card2){ return card1.color.localeCompare(card2.color); });
 		displayCardPool();
 	}
 	if (canvasStr == "deck1") {
@@ -553,15 +527,18 @@ function updatePlayerInfo(player=null) {
 }
 
 /**
- * Shows adds 8 of each basic land to cardPool, then redraws cardPool.
+ * Adds numOfEachLand of each basic land to cardPool, then redraws cardPool.
+ * NOTE: BasicLands was defined in "sets/BasicLands.js", which was inserted in <head>.
  */
-function showLands() {
+function showLands(numOfEachLand=9) {
+	// Remove the "Show Lands" button
 	$("#show_lands").remove();
+	// Build up a land array, then append it to the cardPool array
 	var lands = [];
 	for (landType=0; landType<BasicLands.length; landType++) {
-		// Make a 1-element array with this land type, for getIndividualCard to consume
+		// Make a 1-element array with this land type, for getIndividualCard() to consume
 		var thisLandType = [BasicLands[landType]];
-		for (var i=0; i<8; i++) {
+		for (var i=0; i<numOfEachLand; i++) {
 			insertPos++;
 			lands.push( getIndividualCard(thisLandType, "BasicLand", insertPos) );
 		}
@@ -577,7 +554,7 @@ function showHand() {
 	$(".hand").show();
 	var button_showHand = document.getElementById("show_hand");
 	button_showHand.innerHTML = "Modify Deck";
-	button_showHand.onclick = function(){modifyDeck();};
+	button_showHand.onclick = function(){ modifyDeck(); };
 	$(".deck").hide();
 	deck1_Cache = deck1.slice(); // Store copy for later
 	shuffle(deck1);
@@ -592,7 +569,7 @@ function modifyDeck() {
 	$(".hand").hide();
 	var button_showHand = document.getElementById("show_hand");
 	button_showHand.innerHTML = "Show Hand";
-	button_showHand.onclick = function(){showHand();};
+	button_showHand.onclick = function(){ showHand(); };
 	deck1 = deck1.concat(hand1);
 	// deck1_Cache should evaluate true under normal circumstances; I'm being defensive
 	if (deck1_Cache)
