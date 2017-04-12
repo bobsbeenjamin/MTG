@@ -27,7 +27,7 @@ Done:
 	Why does page sometime give "Wait" prompt? (This went away by itself)
 	Change verbiage from draft to sealed
 Time: 80 hrs
-Note: The seed of this project was my initial attempt at implementing Magic (the game) in a browser.
+Note: The seed of this project was my initial attempt at implementing Magic in a browser.
 */
 
 // UNUSED
@@ -103,12 +103,17 @@ function setUpGame() {
 	deck1Filter1 = document.getElementById("deck1Filter1");
 	deck1Filter2 = document.getElementById("deck1Filter2");
 	// Register mouse events
-	canvas_cardPoolTop.addEventListener("click", function(){ handleScreenClick(canvas_cardPoolTop, event, cardPool1, deck1); });
-	canvas_cardPoolTop.addEventListener("mousemove", function(){ handleMouseHover(canvas_cardPoolTop, event, cardPool1); });
-	canvas_deck.addEventListener("click", function(){ handleScreenClick(canvas_deck, event, deck1, cardPool1); });
-	canvas_deck.addEventListener("mousemove", function(){ handleMouseHover(canvas_deck, event, deck1); });
+	canvas_cardPoolTop.addEventListener("click", function(){ 
+		handleScreenClick(canvas_cardPoolTop, event, cardPool1, deck1); });
+	canvas_cardPoolTop.addEventListener("mousemove", function(){ 
+		handleMouseHover(canvas_cardPoolTop, event, cardPool1); });
+	canvas_deck.addEventListener("click", function(){ 
+		handleScreenClick(canvas_deck, event, deck1, cardPool1); });
+	canvas_deck.addEventListener("mousemove", function(){ 
+		handleMouseHover(canvas_deck, event, deck1); });
 	// (No need to register a click event for the hand)
-	canvas_bottomHand.addEventListener("mousemove", function(){ handleMouseHover(canvas_bottomHand, event, hand1); });
+	canvas_bottomHand.addEventListener("mousemove", function(){ 
+		handleMouseHover(canvas_bottomHand, event, hand1); });
 	// Placeholder text for the cardZoom canvas
 	cardZoom.strokeRect(0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
 	cardZoom.fillText("Hover over a card to display it here", 28, 150);
@@ -207,7 +212,7 @@ function getIndividualCard(cardPool, rarity, insertPos) {
  * @param hand Another array of card objects
  */
 function drawCardFromLibrary(deck, hand, player) {
-	if(deck.length == 0) { // deck is empty
+	if (deck.length == 0) { // deck is empty
 		alert("Player " + player.toString() + " tried to draw from an empty library.");
 		loseGame(player);
 	}
@@ -278,7 +283,10 @@ function displayEverything() {
  * canvas.
  */
 function getCardArea(leftBorder, topBorder) {
-    return {left:leftBorder, right:leftBorder+cardWidth, top: topBorder, bottom: topBorder+cardHeight};
+    return {left:leftBorder, 
+		right:leftBorder+cardWidth, 
+		top: topBorder, 
+		bottom: topBorder+cardHeight};
 }
 
 /**
@@ -301,7 +309,7 @@ function displayCard(card, drawSpace, leftBorder, topBorder) {
 	/*
 	drawSpace.fillText(card.cost, leftBorder+76, topBorder+10);
 	// type - subtype
-	if(card.subtype)
+	if (card.subtype)
 		var fullType = card.type + " - " + card.subtype;
 	else 
 		var fullType = card.type;
@@ -309,14 +317,15 @@ function displayCard(card, drawSpace, leftBorder, topBorder) {
 	// abilities
 	drawSpace.fillText(card.abilities, leftBorder+3, topBorder+40);
 	// p/t
-	if(card.type == "Creature") {
+	if (card.type == "Creature") {
 		p_t = card.power.toString() + "/" + card.toughness.toString();
 		drawSpace.fillText(p_t, leftBorder+80, topBorder+95);
 	}
 	*/
 	/*****  Then, display the card nicely using gatherer *****/
 	var cardImg = new Image();
-	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + card.mvid + "&type=card";
+	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" 
+		+ card.mvid + "&type=card";
 	cardImg.onload = function() { 
 		drawSpace.drawImage(cardImg, leftBorder, topBorder, cardWidth, cardHeight);
 		if (card.rarity == "Promo") {
@@ -400,7 +409,8 @@ function getSortVal(card, sortVal) {
 		return typeLine;
 	}
 	if (sortVal == "rarity") {
-		var raritySortDict = {"Promo":1, "Mythic":1, "Rare":2, "Uncommon":3, "Common":4, "BasicLand":5};
+		var raritySortDict = {"Promo":1, "Mythic":1, "Rare":2, "Uncommon":3, 
+			"Common":4, "BasicLand":5};
 		return raritySortDict[card.rarity];
 	}
 }
@@ -443,14 +453,14 @@ function button_drawCard(deck, hand, player) {
  */
 function handleScreenClick(canvas, event, cardCollectionSrc, cardCollectionDest) {
 	// Catch right click
-	if(event.button == 2) {
+	if (event.button == 2) {
 		event.preventDefault();
 		alert("");
 		return;
 	}
 	var pointerPos = getPointerPositionOnCanvas(canvas, event);
 	var cardIdx = getCardByCoordinates(pointerPos.x, pointerPos.y, cardCollectionSrc);
-	if(cardIdx == null)
+	if (cardIdx == null)
 		return;
 	card = cardCollectionSrc.splice(cardIdx, 1)[0];
 	cardCollectionDest.push(card);
@@ -464,14 +474,15 @@ function handleMouseHover(canvas, event, cardCollection) {
 	// Get card to display
 	var pointerPos = getPointerPositionOnCanvas(canvas, event);
 	var cardIdx = getCardByCoordinates(pointerPos.x, pointerPos.y, cardCollection);
-	if(cardIdx == null)
+	if (cardIdx == null)
 		return;
 	var card = cardCollection[cardIdx];
 	cardStr = JSON.stringify(card);
 	// Draw the card in the zoom box
 	cardZoom.fillText(card.name, 3, 150);
 	var cardImg = new Image();
-	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + card.mvid + "&type=card";
+	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" 
+		+ card.mvid + "&type=card";
 	cardImg.onload = function() {
 		cardZoom.drawImage(cardImg, 0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
 		if (card.rarity == "Promo") {
@@ -495,7 +506,8 @@ function handleMouseHover(canvas, event, cardCollection) {
 function getCardByCoordinates(x, y, cardCollection) {
 	for (var cardIdx=0; cardIdx<cardCollection.length; cardIdx++) {
 		cardArea = cardCollection[cardIdx].cardArea;
-		if(x>=cardArea.left && x<=cardArea.right && y>=cardArea.top && y<=cardArea.bottom)
+		if (x>=cardArea.left && x<=cardArea.right 
+			&& y>=cardArea.top && y<=cardArea.bottom)
 			return cardIdx;
 	}
 	return null;
@@ -512,7 +524,7 @@ function updatePlayerInfo(player=null) {
 		updatePlayerInfo(2);
 		return;
 	}
-	if(player == 1) {
+	if (player == 1) {
 		var newText = "Player 1";
 		newText += "  |  Cards in hand: " + hand1.length;
 		newText += "  |  Cards in deck: " + deck1.length;
@@ -602,14 +614,14 @@ function drawOpeningHands(mulligan=false) {
 		mulliganVal1--;
 	else
 		mulliganVal1 = 7;
-	if(deck1.length >= mulliganVal1) {
+	if (deck1.length >= mulliganVal1) {
 		for (var i=0; i<mulliganVal1; i++) {
 			drawCardFromLibrary(deck1, hand1, 1);
 		}
 	}
 	else
 		alert("Warning: Deck 1 has too few cards for an opening hand.");
-	if(deck2.length > 6) {
+	if (deck2.length > 6) {
 		for (var i=0; i<7; i++) {
 			drawCardFromLibrary(deck2, hand2, 2);
 		}
