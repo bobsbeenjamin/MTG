@@ -121,7 +121,7 @@ function setUpGame() {
 	// Other necessary setup items
 	updateStatus("Creating card pool...");
 	createCardPool();
-	updateStatus("Sorting card pool...");
+	//updateStatus("Sorting card pool...");
 	//sortCardPool(cardPool1);
 	updateStatus("Displaying card pool...");
 	displayEverything();
@@ -222,6 +222,41 @@ function drawCardFromLibrary(deck, hand, player) {
 }
 
 /**
+ * Displays all cards in hand1, hand2, deck1, and deck2 and defines 
+ * cardArea for each card displayed. Also updates playerInfo for each player.
+ */
+function displayEverything() {
+	displayCardPool1();
+	var button_showHand = document.getElementById("show_hand");
+	if (button_showHand.innerHTML == "Modify Deck")
+		displayHand1()
+	else
+		displayDeck1();
+}
+
+/**
+ * Displays all cards in cardPool and defines cardArea for each card displayed.
+ */
+function displayCardPool1() {
+	displayOneCanvas(canvas_cardPool1, context_cardPool1, cardPool1);
+}
+
+/**
+ * Displays all cards in deck1 and defines cardArea for each card displayed.
+ */
+function displayDeck1() {
+	displayOneCanvas(canvas_deck1, context_deck1, deck1);
+}
+
+/**
+ * Displays all cards in hand1 and defines cardArea for each card displayed.
+ */
+function displayHand1() {
+	displayOneCanvas(canvas_hand1, context_hand1, hand1);
+	updatePlayerInfo(1);
+}
+
+/**
  * Displays all cards in collection and defines cardArea for each card displayed.
  */
 function displayOneCanvas(canvas, context, collection) {
@@ -242,41 +277,6 @@ function displayOneCanvas(canvas, context, collection) {
 		collection[card].cardArea = getCardArea(leftBorder, topBorder);
 		displayCard(collection[card], context, leftBorder, topBorder);
 	}
-}
-
-/**
- * Displays all cards in cardPool and defines cardArea for each card displayed.
- */
-function displayCardPool() {
-	displayOneCanvas(canvas_cardPool1, context_cardPool1, cardPool1);
-}
-
-/**
- * Displays all cards in deck1 and defines cardArea for each card displayed.
- */
-function displayDeck1() {
-	displayOneCanvas(canvas_deck1, context_deck1, deck1);
-}
-
-/**
- * Displays all cards in hand1 and defines cardArea for each card displayed.
- */
-function displayHand1() {
-	displayOneCanvas(canvas_hand1, context_hand1, hand1);
-	updatePlayerInfo(1);
-}
-
-/**
- * Displays all cards in hand1, hand2, deck1, and deck2 and defines 
- * cardArea for each card displayed. Also updates playerInfo for each player.
- */
-function displayEverything() {
-	displayCardPool();
-	var button_showHand = document.getElementById("show_hand");
-	if (button_showHand.innerHTML == "Modify Deck")
-		displayHand1()
-	else
-		displayDeck1();
 }
 
 /**
@@ -359,44 +359,53 @@ function shuffle(deck) {
 /**********************************/
 
 /**
- * Sorts a collection and redraws it on canvas (ie, cardPool and deck1 are collections).
+ * Handle a button click for one of the sorting buttons.
  */
-function sortCards(canvasStr) {
-	// Note: In my first attempt at this, I sorted the array twice, instead of having 
-	// 2 sort properties per card.
-	if (canvasStr == "cardPool") {
-		//cardPool1.forEach(getSortVal(sortVal), card);
-		var sortVal = cardPoolFilter1.value;
-		cardPool1.forEach(function(card) { card.sort1 = getSortVal(card, sortVal); });
-		var sortVal = cardPoolFilter2.value;
-		cardPool1.forEach(function(card) { card.sort2 = getSortVal(card, sortVal); });
-		cardPool1.sort(function(card1, card2){ return compareCards(card1, card2); });
-		displayCardPool();
+function button_sortCards(collectionStr) {
+	if (collectionStr == "cardPool1") {
+		sortCards(cardPool1, collectionStr, cardPoolFilter1, cardPoolFilter2);
 	}
-	if (canvasStr == "deck1") {
-		var sortVal = deck1Filter1.value;
-		deck1.forEach(function(card) { card.sort1 = getSortVal(card, sortVal); });
-		var sortVal = deck1Filter2.value;
-		deck1.forEach(function(card) { card.sort2 = getSortVal(card, sortVal); });
-		deck1.sort(function(card1, card2){ return compareCards(card1, card2); });
-		displayDeck1();
+	if (collectionStr == "deck1") {
+		sortCards(deck1, collectionStr, deck1Filter1, deck1Filter2);
 	}
 }
 
 /**
+ * Sorts a collection and redraws it on canvas (cardPool and deck1 are the collections).
+ */
+function sortCards(collection, collectionStr, filter1, filter2) {
+	// Set the values of sort1 and sort for each card in the collection
+	var sortVal = filter1.value;
+	collection.forEach(function(card) { card.sort1 = getSortVal(card, sortVal); });
+	sortVal = filter2.value;
+	collection.forEach(function(card) { card.sort2 = getSortVal(card, sortVal); });
+	// Sort the cards, using the compareCards function to compare 2 cards
+	collection.sort(function(card1, card2){ return compareCards(card1, card2); });
+	// Redraw the sorted collection
+	if (collectionStr == "deck1")
+		displayDeck1();
+	else
+		displayCardPool1();
+}
+
+/**
  * Sets the sort property for a card. sortVal is a string pulled from a DOM dropdown, 
- * and the card set to "this".
+ * and the card is "this".
  * NOTE: This is a helper for the sortCards function.
  */
 function getSortVal(card, sortVal) {
 	if (sortVal == "color") {
 		var colorSortDict = {"C":1, "W":2, "U":3, "B":4, "R":5, "G":6, "M":7};
-		return colorSortDict[card.color];
+		// Make lands sort to the end
+		if (card.types.includes("Land"))
+			return 10;
+		else
+			return colorSortDict[card.color];
 	}
-	if (sortVal == "cmc") {
+	else if (sortVal == "cmc") {
 		return card.cmc;
 	}
-	if (sortVal == "types") {
+	else if (sortVal == "types") {
 		// Modify type line to sort more like players would want
 		var typeLine = card.types;
 		if (typeLine.includes("Legendary"))
@@ -409,10 +418,15 @@ function getSortVal(card, sortVal) {
 		}
 		return typeLine;
 	}
-	if (sortVal == "rarity") {
+	else if (sortVal == "rarity") {
 		var raritySortDict = {"Promo":1, "Mythic":1, "Rare":2, "Uncommon":3, 
 			"Common":4, "BasicLand":5};
 		return raritySortDict[card.rarity];
+	}
+	// sortVal is not set, meaning the user didn't select a value from the dropdown
+	else {
+		// Returning 0 ensures that this sort will result in zero for all comparisons
+		return 0;
 	}
 }
 
@@ -441,7 +455,7 @@ function compareCards(card1, card2) {
 }
 
 /**
- * Draws a card from the appropriate deck, then redraws everything.
+ * Draws a card from the appropriate deck, then displays the hand.
  */
 function button_drawCard(deck, hand, player) {
 	drawCardFromLibrary(deck, hand, player);
@@ -449,8 +463,8 @@ function button_drawCard(deck, hand, player) {
 }
 
 /**
- * If the click was on a card in hand1 or hand2, then it is removed from that hand and 
- * added to the battlefield.
+ * If the click was on a card in cardCollectionSrc, then it is removed from the source 
+ * and added to cardCollectionDest.
  */
 function handleScreenClick(canvas, event, cardCollectionSrc, cardCollectionDest) {
 	// Catch right click
@@ -469,7 +483,7 @@ function handleScreenClick(canvas, event, cardCollectionSrc, cardCollectionDest)
 }
 
 /**
- * If user is hovering over a card, then zoom in on the card.
+ * If user is hovering over a card, then display the card in the cardZoom pane.
  */
 function handleMouseHover(canvas, event, cardCollection) {
 	// Get card to display
@@ -557,7 +571,7 @@ function showLands(numOfEachLand=9) {
 		}
 	}
 	cardPool1 = cardPool1.concat(lands);
-	displayCardPool();
+	displayCardPool1();
 }
 
 /**
@@ -589,7 +603,7 @@ function modifyDeck() {
 		deck1 = deck1_Cache;
 	hand1 = [];
 	$(".deck").show();
-	displayCardPool();
+	displayCardPool1();
 }
 
 /**

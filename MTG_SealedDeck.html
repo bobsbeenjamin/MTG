@@ -24,7 +24,7 @@
 <body>
   <h2>Your Card Pool</h2>
   <h4>By default, your card pool is displayed in the order that you would open packs. Use the dropdowns to create your own sort.</h4>
-  <select id="cardPoolFilter1"> <!-- onchange="sortCards(cardPool);"> -->
+  <select id="cardPoolFilter1"> <!-- onchange="button_sortCards(cardPool);"> -->
     <option value=""></option>
     <option value="color">Color</option>
     <option value="cmc">CMC</option>
@@ -46,7 +46,7 @@
     <option value="types">Card Types</option>
     <option value="rarity">Rarity</option>
   </select>
-  <button id="button_cardPoolFilter" onclick="sortCards('cardPool');">Sort</button>
+  <button id="button_cardPoolFilter" onclick="button_sortCards('cardPool1');">Sort</button>
   <br/>
   <canvas id="cardPool" width="832" height="104" style="border:2px solid #000000;">
     Your browser does not support the HTML5 canvas protocol. Lame!
@@ -67,7 +67,7 @@
     <option value="types">Card Types</option>
     <option value="rarity">Rarity</option>
   </select>
-  <button id="button_deck1Filter" class="deck" onclick="sortCards('deck1');">Sort</button>
+  <button id="button_deck1Filter" class="deck" onclick="button_sortCards('deck1');">Sort</button>
   <br/>
   <canvas id="deck" class="deck" width="832" height="312" style="border:2px solid #000000;"></canvas>
   <br/>
