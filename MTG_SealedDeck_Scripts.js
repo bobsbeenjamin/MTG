@@ -42,14 +42,14 @@ var mulliganVal1 = 7;
 var status = "";
 var cardWidth = 100;
 var cardHeight = 140;
-var canvas_cardPoolTop = null;
-var canvas_deck = null;
-var canvas_bottomHand = null;
+var canvas_cardPool1 = null;
+var canvas_deck1 = null;
+var canvas_hand1 = null;
 var canvas_cardZoom = null;
-var cardPoolTop = null;
-var deck = null;
-var bottomHand = null;
-var cardZoom = null;
+var context_cardPool1 = null;
+var context_deck1 = null;
+var context_hand1 = null;
+var context_cardZoom = null;
 var cardPoolFilter1 = null;
 var cardPoolFilter2 = null;
 var deck1Filter1 = null;
@@ -78,21 +78,22 @@ function testFunction() {
 }
 
 /**
- * Links display variables to the DOM. Creates and displays random card pool.
+ * Links display variables to the DOM. Creates and displays card pool of random cards. 
+ * Currently, this is called when the page loads: "$(document).ready(setUpGame);"
  */
 function setUpGame() {
 	// Link drawing space variables to the DOM 
-	canvas_cardPoolTop = document.getElementById("cardPool");
-	cardPoolTop = canvas_cardPoolTop.getContext("2d");
-	cardPoolTop.font = "10px Arial";
-	canvas_deck = document.getElementById("deck");
-	deck = canvas_deck.getContext("2d");
-	deck.font = "10px Arial";
-	canvas_bottomHand = document.getElementById("bottomHand");
-	bottomHand = canvas_bottomHand.getContext("2d");
-	bottomHand.font = "10px Arial";
+	canvas_cardPool1 = document.getElementById("cardPool");
+	context_cardPool1 = canvas_cardPool1.getContext("2d");
+	context_cardPool1.font = "10px Arial";
+	canvas_deck1 = document.getElementById("deck");
+	context_deck1 = canvas_deck1.getContext("2d");
+	context_deck1.font = "10px Arial";
+	canvas_hand1 = document.getElementById("hand");
+	context_hand1 = canvas_hand1.getContext("2d");
+	context_hand1.font = "10px Arial";
 	canvas_cardZoom = document.getElementById("cardZoom");
-	cardZoom = canvas_cardZoom.getContext("2d");
+	context_cardZoom = canvas_cardZoom.getContext("2d");
 	// Link text display variables to the DOM
 	text_player1 = document.getElementById("player1_txt");
 	text_player2 = document.getElementById("player2_txt");
@@ -103,20 +104,20 @@ function setUpGame() {
 	deck1Filter1 = document.getElementById("deck1Filter1");
 	deck1Filter2 = document.getElementById("deck1Filter2");
 	// Register mouse events
-	canvas_cardPoolTop.addEventListener("click", function(){ 
-		handleScreenClick(canvas_cardPoolTop, event, cardPool1, deck1); });
-	canvas_cardPoolTop.addEventListener("mousemove", function(){ 
-		handleMouseHover(canvas_cardPoolTop, event, cardPool1); });
-	canvas_deck.addEventListener("click", function(){ 
-		handleScreenClick(canvas_deck, event, deck1, cardPool1); });
-	canvas_deck.addEventListener("mousemove", function(){ 
-		handleMouseHover(canvas_deck, event, deck1); });
+	canvas_cardPool1.addEventListener("click", function(){ 
+		handleScreenClick(canvas_cardPool1, event, cardPool1, deck1); });
+	canvas_cardPool1.addEventListener("mousemove", function(){ 
+		handleMouseHover(canvas_cardPool1, event, cardPool1); });
+	canvas_deck1.addEventListener("click", function(){ 
+		handleScreenClick(canvas_deck1, event, deck1, cardPool1); });
+	canvas_deck1.addEventListener("mousemove", function(){ 
+		handleMouseHover(canvas_deck1, event, deck1); });
 	// (No need to register a click event for the hand)
-	canvas_bottomHand.addEventListener("mousemove", function(){ 
-		handleMouseHover(canvas_bottomHand, event, hand1); });
+	canvas_hand1.addEventListener("mousemove", function(){ 
+		handleMouseHover(canvas_hand1, event, hand1); });
 	// Placeholder text for the cardZoom canvas
-	cardZoom.strokeRect(0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
-	cardZoom.fillText("Hover over a card to display it here", 28, 150);
+	context_cardZoom.strokeRect(0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
+	context_cardZoom.fillText("Hover over a card to display it here", 28, 150);
 	// Other necessary setup items
 	updateStatus("Creating card pool...");
 	createCardPool();
@@ -247,21 +248,21 @@ function displayOneCanvas(canvas, context, collection) {
  * Displays all cards in cardPool and defines cardArea for each card displayed.
  */
 function displayCardPool() {
-	displayOneCanvas(canvas_cardPoolTop, cardPoolTop, cardPool1);
+	displayOneCanvas(canvas_cardPool1, context_cardPool1, cardPool1);
 }
 
 /**
  * Displays all cards in deck1 and defines cardArea for each card displayed.
  */
 function displayDeck1() {
-	displayOneCanvas(canvas_deck, deck, deck1);
+	displayOneCanvas(canvas_deck1, context_deck1, deck1);
 }
 
 /**
  * Displays all cards in hand1 and defines cardArea for each card displayed.
  */
 function displayHand1() {
-	displayOneCanvas(canvas_bottomHand, bottomHand, hand1);
+	displayOneCanvas(canvas_hand1, context_hand1, hand1);
 	updatePlayerInfo(1);
 }
 
@@ -479,18 +480,18 @@ function handleMouseHover(canvas, event, cardCollection) {
 	var card = cardCollection[cardIdx];
 	cardStr = JSON.stringify(card);
 	// Draw the card in the zoom box
-	cardZoom.fillText(card.name, 3, 150);
+	context_cardZoom.fillText(card.name, 3, 150);
 	var cardImg = new Image();
 	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" 
 		+ card.mvid + "&type=card";
 	cardImg.onload = function() {
-		cardZoom.drawImage(cardImg, 0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
+		context_cardZoom.drawImage(cardImg, 0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
 		if (card.rarity == "Promo") {
-			var oldFont = cardZoom.font;
-			cardZoom.font = "20px Arial";
-			cardZoom.strokeStyle = "White";
-			cardZoom.strokeText("Promo Card", 95, 170);
-			cardZoom.font = oldFont;
+			var oldFont = context_cardZoom.font;
+			context_cardZoom.font = "20px Arial";
+			context_cardZoom.strokeStyle = "White";
+			context_cardZoom.strokeText("Promo Card", 95, 170);
+			context_cardZoom.font = oldFont;
 		}
 	};
 }
