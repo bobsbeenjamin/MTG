@@ -1,34 +1,5 @@
 /*
-TODOs: 
-	Allow user-defined sorting
-		Add groupings
-		Should each dropdown give sort and group options?
-		Link options (make selection from sort 1 modify options for sort 2, etc)
-	Support 2HG
-	Deckbuilding stats
-		Display updated stats live
-		Card count, Mana curve, Color info
-	Store additional card info
-		Display below cardZoom
-	Mobile support
-		Card popup on long press
-		Adapt card size and canvas size for card pool and deck
-Done: 
-	Store additional card info
-		Get color
-	Allow user-defined sorting
-		Fix alphabetical sort (only works with 2 sort options)
-	Hand similator
-		Add basic lands
-		Draw opening hands
-		Don't keep cards in hand when modifying deck
-		Display cardpool correctly after viewing hand
-		Add mulligan button
-		Add "Draw New Hand" button
-	Why does page sometime give "Wait" prompt? (This went away by itself)
-	Change verbiage from draft to sealed
-Time: 80 hrs
-Note: The seed of this project was my initial attempt at implementing Magic in a browser.
+Logic for Sealed Deck Project at https://github.com/bobsbeenjamin/MTG/
 */
 
 // UNUSED
@@ -418,7 +389,7 @@ function button_sortCards(collectionStr) {
  */
 function sortCards(collection, collectionStr, filter1, filter2, grouping1) {
 	// Set the values of sort1, sort2, and grouping1 for each card in the collection
-	let sortVal = filter1.value;
+	var sortVal = filter1.value;
 	collection.forEach(function(card) { card.sort1 = getSortVal(card, sortVal); });
 	sortVal = filter2.value;
 	collection.forEach(function(card) { card.sort2 = getSortVal(card, sortVal); });
@@ -449,7 +420,7 @@ function sortCards(collection, collectionStr, filter1, filter2, grouping1) {
 		}
 		// Group using card type logic
 		else {
-			
+			// TODO: Fill me in
 		}
 		// Sort each group
 		groups.forEach(function(group) {
