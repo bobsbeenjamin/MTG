@@ -1,9 +1,9 @@
 /*
 TODOs: 
 	Allow user-defined sorting
-		Fix alphabetical sort (only works with 2 sort options)
 		Add groupings
-		Link options (make selection from sort 1 modify options for sort 2)
+		Should each dropdown give sort and group options?
+		Link options (make selection from sort 1 modify options for sort 2, etc)
 	Support 2HG
 	Deckbuilding stats
 		Display updated stats live
@@ -17,6 +17,7 @@ Done:
 	Store additional card info
 		Get color
 	Allow user-defined sorting
+		Fix alphabetical sort (only works with 2 sort options)
 	Hand similator
 		Add basic lands
 		Draw opening hands
@@ -33,15 +34,15 @@ Note: The seed of this project was my initial attempt at implementing Magic in a
 // UNUSED
 var hand2=[], deck2=[];
 // Globals 
-var insertPos = 1;
 var cardPool1 = [];
 var deck1 = [];
 var deck1_Cache = [];
 var hand1 = [];
+var insertPos = 1;
 var mulliganVal1 = 7;
 var status = "";
-var cardWidth = 100;
-var cardHeight = 140;
+const cardWidth = 100;
+const cardHeight = 140;
 var canvas_cardPool1 = null;
 var canvas_deck1 = null;
 var canvas_hand1 = null;
@@ -52,9 +53,13 @@ var context_hand1 = null;
 var context_cardZoom = null;
 var cardPoolFilter1 = null;
 var cardPoolFilter2 = null;
+var cardPoolGroupBy1 = null;
 var deck1Filter1 = null;
 var deck1Filter2 = null;
 var text_status = null;
+// offsets are used to "cascade" cards in a group
+const offset_Left = 0;
+const offset_Top = 15;
 // Handy definition
 function isNumber(str) { return !isNaN(str) || str=='X'; }
 
@@ -101,6 +106,7 @@ function setUpGame() {
 	// Link dropdowns to the DOM
 	cardPoolFilter1 = document.getElementById("cardPoolFilter1");
 	cardPoolFilter2 = document.getElementById("cardPoolFilter2");
+	cardPoolGroupBy1 = document.getElementById("cardPoolGroupBy1");
 	deck1Filter1 = document.getElementById("deck1Filter1");
 	deck1Filter2 = document.getElementById("deck1Filter2");
 	// Register mouse events
@@ -260,22 +266,60 @@ function displayHand1() {
  * Displays all cards in collection and defines cardArea for each card displayed.
  */
 function displayOneCanvas(canvas, context, collection) {
-	// Recalculate canvas size
-	var numRows = Math.ceil(collection.length / 8);
-	// Make sure that an empty row is displayed for an empty collection
-	numRows = (numRows == 0) ? 1 : numRows;
-	canvas.height = (cardHeight + 4) * numRows + 2;
-	// Clear canvas
-	context.clearRect(0, 0, canvas.width, canvas.height);
-	// Display collection
-	var row = -1;
-	for (var card=0; card<collection.length; card++) {
-		if (card%8 == 0)
-			row++;
-		var leftBorder = (cardWidth + 4) * (card%8) + 2;
-		var topBorder = (cardHeight + 4) * row + 2;
-		collection[card].cardArea = getCardArea(leftBorder, topBorder);
-		displayCard(collection[card], context, leftBorder, topBorder);
+	// Display card groupings
+	if (collection.hasOwnProperty("groups")) {
+		// Set collection to its groups property, for easier code
+		collection = collection.groups;
+		// Get total number of cards (for left offset)
+		let totalNumCards = 0;
+		for (let group=0; group<collection.length; group++) {
+			totalNumCards += collection[group].length;
+		}
+		// Recalculate canvas size
+		let numCols = collection.length;
+		canvas.width = ((cardWidth + 4) * numCols) + (offset_Left * totalNumCards);
+		// Determine the size of the largest group
+		let largestGroup = 0;
+		for (let group=0; group<collection.length; group++) {
+			let groupLength = collection[group].length;
+			largestGroup = (groupLength > largestGroup) ? groupLength : largestGroup;
+		}
+		canvas.height = (offset_Top * largestGroup) + cardHeight + 4;
+		// Clear canvas
+		context.clearRect(0, 0, canvas.width, canvas.height);
+		// Display collection by group
+		let leftBorder = 2;
+		for (let groupIdx=0; groupIdx<collection.length; groupIdx++) {
+			let group = collection[groupIdx];
+			for (let card=0; card<group.length; card++) {
+				let topBorder = offset_Top * card + 2;
+				group[card].cardArea = getCardArea(leftBorder, topBorder);
+				displayCard(group[card], context, leftBorder, topBorder);
+				leftBorder += offset_Left;
+			}
+			// Move left for next group
+			leftBorder += cardWidth + 4;
+		}
+	}
+	// Display individual cards
+	else {
+		// Recalculate canvas size
+		let numRows = Math.ceil(collection.length / 8);
+		// Make sure that an empty row is displayed for an empty collection
+		numRows = (numRows == 0) ? 1 : numRows;
+		canvas.height = (cardHeight + 4) * numRows + 2;
+		// Clear canvas
+		context.clearRect(0, 0, canvas.width, canvas.height);
+		// Display collection
+		let row = -1;
+		for (let card=0; card<collection.length; card++) {
+			if (card%8 == 0)
+				row++;
+			let leftBorder = (cardWidth + 4) * (card%8) + 2;
+			let topBorder = (cardHeight + 4) * row + 2;
+			collection[card].cardArea = getCardArea(leftBorder, topBorder);
+			displayCard(collection[card], context, leftBorder, topBorder);
+		}
 	}
 }
 
@@ -362,25 +406,62 @@ function shuffle(deck) {
  * Handle a button click for one of the sorting buttons.
  */
 function button_sortCards(collectionStr) {
-	if (collectionStr == "cardPool1") {
-		sortCards(cardPool1, collectionStr, cardPoolFilter1, cardPoolFilter2);
-	}
-	if (collectionStr == "deck1") {
-		sortCards(deck1, collectionStr, deck1Filter1, deck1Filter2);
-	}
+	if (collectionStr == "cardPool1")
+		sortCards(cardPool1, collectionStr, cardPoolFilter1, cardPoolFilter2, 
+			cardPoolGroupBy1);
+	if (collectionStr == "deck1")
+		sortCards(deck1, collectionStr, deck1Filter1, deck1Filter2, undefined);
 }
 
 /**
  * Sorts a collection and redraws it on canvas (cardPool and deck1 are the collections).
  */
-function sortCards(collection, collectionStr, filter1, filter2) {
-	// Set the values of sort1 and sort for each card in the collection
-	var sortVal = filter1.value;
+function sortCards(collection, collectionStr, filter1, filter2, grouping1) {
+	// Set the values of sort1, sort2, and grouping1 for each card in the collection
+	let sortVal = filter1.value;
 	collection.forEach(function(card) { card.sort1 = getSortVal(card, sortVal); });
 	sortVal = filter2.value;
 	collection.forEach(function(card) { card.sort2 = getSortVal(card, sortVal); });
-	// Sort the cards, using the compareCards function to compare 2 cards
-	collection.sort(function(card1, card2){ return compareCards(card1, card2); });
+	sortVal = grouping1.value;
+	collection.forEach(function(card) { card.grouping1 = getSortVal(card, sortVal); });
+	// If a value is selected for grouping1, then group first, sort each group, and sort 
+	// the groups
+	if (grouping1.value) {
+		let groups = [];
+		// Group based on numbered slots
+		if (typeof(collection[0].grouping1) == "number") {
+			// Make an array of 17 empty arrays (16 is the biggest possible value)
+			groups = [
+				[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
+			];
+			// Push each card into the appropriate sub-array
+			collection.forEach(function(card) {
+				let idx = card.grouping1;
+				groups[idx].push(card);
+			});
+			// Remove empty groups (for cleaner displaying)
+			let nonEmptyGroups = [];
+			for (let idx=0; idx<groups.length; idx++) {
+				if (groups[idx].length > 0)
+					nonEmptyGroups.push(groups[idx]);
+			}
+			groups = nonEmptyGroups;
+		}
+		// Group using card type logic
+		else {
+			
+		}
+		// Sort each group
+		groups.forEach(function(group) {
+			group.sort(function(card1, card2){ return compareCards(card1, card2); });
+		});
+		// Group the collection
+		collection.groups = groups;
+	}
+	// Simply sort the cards, using the compareCards function to compare 2 cards
+	else {
+		collection.sort(function(card1, card2){ return compareCards(card1, card2); });
+	}
 	// Redraw the sorted collection
 	if (collectionStr == "deck1")
 		displayDeck1();
@@ -406,16 +487,21 @@ function getSortVal(card, sortVal) {
 		return card.cmc;
 	}
 	else if (sortVal == "types") {
-		// Modify type line to sort more like players would want
+		// Modify type line to sort how many players would prefer
 		var typeLine = card.types;
+		// Slice off "Legendary" from front
 		if (typeLine.includes("Legendary"))
-			typeLine = typeLine.slice(10); // slice off "Legendary" from front
+			typeLine = typeLine.slice(10);
+		// Remove creature types
 		if (typeLine.includes("Creature")) {
 			if (typeLine.includes("Artifact"))
 				typeLine = "Artifact Creature";
 			else
 				typeLine = "Creature";
 		}
+		// Remove land subtypes and super types
+		if (typeLine.includes("Land"))
+			typeLine = "Land";
 		return typeLine;
 	}
 	else if (sortVal == "rarity") {
@@ -435,7 +521,6 @@ function getSortVal(card, sortVal) {
  * NOTE: This is a helper for the sortCards function.
  */
 function compareCards(card1, card2) {
-	//return card1.color.localeCompare(card2.color);
 	var comparison = 0;
 	if (typeof(card1.sort1) == "string")
 		comparison = card1.sort1.localeCompare(card2.sort1);
