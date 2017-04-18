@@ -1,0 +1,56 @@
+/*** TODO List for MTG Play Emulator Project at https://github.com/bobsbeenjamin/MTG/ ***/
+
+Time: 30 hrs
+
+TODOs:
+	Set up decks
+		Roll for play vs draw
+		Mulligan
+	DOM/Graphics
+		Wrap text on abilities
+		Stack similar cards (lands, etc)
+		Seperate lands from spells on battlefield
+		Show tapped cards sideways
+		Ensure that cards show on setup
+		Hearthstone-inspired L&F
+			Player icons
+			Taunts
+	Play cards
+		Pay for spells
+		Ensure one-land-per-turn
+	Combat
+		Attack
+		Block
+		Damage
+		Summoning sickness
+	Evergreen keywords
+		Flying
+		Trample
+		First Strike
+	New keywords
+		Vehicles
+		Energy
+	Zone changes
+		Show graveyards
+		Set triggers on zone changes
+	Misc
+		Read decks from file
+		Enforce turns
+			Phases and steps
+Done:
+	Set up decks
+		Create data
+		Shuffle decks
+		Draw hands
+		Temp display cards
+		Display cards
+	DOM/Graphics
+		Add shuffle button
+		Display life totals and cards in hand/deck
+		Hover to zoom
+	Play cards
+		Play lands
+		Cast spells
+		Arrange cards on battlefield
+	Misc
+		Player loses

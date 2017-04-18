@@ -1,78 +1,43 @@
 /*
-TODOs:
-	Set up decks
-		Mulligan
-	DOM/Graphics
-		Wrap text on abilities
-		Show tapped cards sideways
-		Ensure that cards show on setup
-		Hover to zoom
-	Play cards
-		Seperate lands from spells on battlefield
-		Pay for spells
-		Ensure one-land-per-turn
-	Combat
-		Attack
-		Block
-		Damage
-		Summoning sickness
-	Evergreen keywords
-		Flying
-		Trample
-		First Strike
-	New keywords
-		Vehicles
-		Energy
-	Zone changes
-		Show graveyards
-		Set triggers on zone changes
-	Misc
-		Read decks from file
-		Enforce turns
-			Phases and steps
-Done:
-	Set up decks
-		Create data
-		Shuffle decks
-		Draw hands
-		Temp display cards
-		Display cards
-	DOM/Graphics
-		Add shuffle button
-		Display life totals and cards in hand/deck
-	Play cards
-		Play lands
-		Cast spells
-		Arrange cards on battlefield
-	Misc
-		Player loses
-Time: 15 hrs
+Logic for MTG Play Emulator Project at https://github.com/bobsbeenjamin/MTG/
 */
 
 // Globals 
-deck1 = [];
-deck2 = [];
-hand1 = [];
-hand2 = [];
-battlefield1 = [];
-battlefield2 = [];
-life1 = 20;
-life2 = 20;
-cardWidth = 100;
-cardHeight = 100;
-canvas_topHand = null;
-canvas_bottomHand = null;
-canvas_battlefield = null;
-canvas_cardZoom = null;
-topHand = null;
-bottomHand = null;
-battlefield = null;
-cardZoom = null;
-text_player1 = null;
-text_player2 = null;
+var deck1 = [];
+var deck2 = [];
+var hand1 = [];
+var hand2 = [];
+var battlefield1 = [];
+var battlefield2 = [];
+var life1 = 20;
+var life2 = 20;
+var status = "";
+var cardWidth = 100;
+var cardHeight = 100;
+var canvas_topHand = null;
+var canvas_bottomHand = null;
+var canvas_battlefield = null;
+var canvas_cardZoom = null;
+var topHand = null;
+var bottomHand = null;
+var battlefield = null;
+var cardZoom = null;
+var text_player1 = null;
+var text_player2 = null;
+var text_status = null;
 
 // Set up the game once the page has loaded
 $(document).ready(setUpGame);
+
+/**
+ * Currently:
+ * Draws a card for each player, to test updatePlayerInfo().
+ */
+function testFunction() {
+	drawCardFromLibrary(deck1, hand1, 1);
+	drawCardFromLibrary(deck2, hand2, 2);
+	displayEverything();
+}
 
 /**
  * Links display variables to the DOM. Shuffles both decks. Displays both opening hands.
@@ -90,22 +55,30 @@ function setUpGame() {
 	battlefield.font = "10px Arial";
 	canvas_cardZoom = document.getElementById("cardzoom");
 	cardZoom = canvas_cardZoom.getContext("2d");
+	// Link text display variables to the DOM
 	text_player1 = document.getElementById("player1_txt");
 	text_player2 = document.getElementById("player2_txt");
-	// Register key mouse events
+	text_status = document.getElementById("status_txt");
+	// Register mouse events
 	canvas_topHand.addEventListener("click", function(){ handleScreenClick(canvas_topHand, event, hand1, 1); });
 	canvas_topHand.addEventListener("mousemove", function(){ handleMouseHover(canvas_topHand, event, hand1); });
 	canvas_bottomHand.addEventListener("click", function(){ handleScreenClick(canvas_bottomHand, event, hand2, 2); });
 	canvas_bottomHand.addEventListener("mousemove", function(){ handleMouseHover(canvas_bottomHand, event, hand2); });
 	canvas_battlefield.addEventListener("mousemove", function(){ handleMouseHover(canvas_battlefield, event, battlefield1); });
 	canvas_battlefield.addEventListener("mousemove", function(){ handleMouseHover(canvas_battlefield, event, battlefield2); });
+	// Placeholder text for the cardZoom canvas
+	cardZoom.strokeRect(0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
+	cardZoom.fillText("Hover over a card to display it here", 28, 150);
 	// Other necessary setup items
+	updateStatus("Creating decks...");
 	createDecks();
+	updateStatus("Shuffling decks...");
 	shuffle(deck1);
 	shuffle(deck2);
+	updateStatus("Drawing hands...");
 	drawOpeningHands();
 	displayEverything();
-	$("#setup").remove();
+	updateStatus("It's Player 1's turn");
 }
 
 /**
@@ -267,7 +240,8 @@ function drawCardFromLibrary(deck, hand, player) {
 }
 
 /**
- * Displays all cards in hand1 and hand2, and defines cardArea for each card displayed.
+ * Displays all cards in hand1, hand2, battlefield1, and battlefield2 and defines 
+ * cardArea for each card displayed. Also updates playerInfo for each player.
  */
 function displayEverything() {
 	// Clear everything
@@ -302,8 +276,7 @@ function displayEverything() {
 		battlefield2[card].cardArea = getCardArea(leftBorder, topBorder);
 		displayCard(battlefield2[card], battlefield, leftBorder, topBorder);
 	}
-	updatePlayerInfo(1);
-	updatePlayerInfo(2);
+	updatePlayerInfo();
 }
 
 /**
@@ -322,6 +295,7 @@ function getCardArea(leftBorder, topBorder) {
  * @param topBorder {number} Number of pixels below the top canvas edge
  */
 function displayCard(card, drawSpace, leftBorder, topBorder) {
+	/*****  First, draw the card in text form (as placholder) *****/
 	// blank out the drawing space
 	drawSpace.clearRect(leftBorder, topBorder, cardWidth, cardHeight);
 	//// Draw placholder text  ////
@@ -344,7 +318,7 @@ function displayCard(card, drawSpace, leftBorder, topBorder) {
 		p_t = card.power.toString() + "/" + card.toughness.toString();
 		drawSpace.fillText(p_t, leftBorder+80, topBorder+95);
 	}
-	// Draw nicely with gatherer
+	/*****  Then, display the card nicely using gatherer *****/
 	var cardImg = new Image();
 	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + card.mvid + "&type=card";
 	drawSpace.drawImage(cardImg, leftBorder, topBorder, cardWidth, cardHeight);
@@ -434,24 +408,44 @@ function getCardThatWasClicked(x, y, cardCollection) {
 }
 
 /**
- * Updates the player header for the given player.
+ * Updates player stats for the given player. If nothing is passed, then this updates 
+ * both players.
  * @param player A number representing player1 or player2
  */
-function updatePlayerInfo(player) {
+function updatePlayerInfo(player=null) {
+	if (!player) {
+		updatePlayerInfo(1);
+		updatePlayerInfo(2);
+		return;
+	}
 	if(player == 1) {
-		newText = "Player 1";
+		var newText = "Player 1";
 		newText += "  |  Life: " + life1;
 		newText += "  |  Cards in hand: " + hand1.length;
 		newText += "  |  Cards in deck: " + deck1.length;
 		$("#player1_txt").text(newText);
 	}
 	else {
-		newText = "Player 2";
+		var newText = "Player 2";
 		newText += "  |  Life: " + life2;
 		newText += "  |  Cards in hand: " + hand2.length;
 		newText += "  |  Cards in deck: " + deck2.length;
 		$("#player2_txt").text(newText);
 	}
+}
+
+/**
+ * Updates the current status message. If overWrite is true (or not passed), then status 
+ * is replaced with newStatus. Otherwise, newStatus is appended to the end of status.
+ * @param newStatus The new status to display
+ * @param overWrite (optional) Pass false to append this message to existing messages
+ */
+function updateStatus(newStatus, overWrite=true) {
+	if (overWrite)
+		status = newStatus;
+	else
+		status += newStatus;
+	$("#status_txt").text(status);
 }
 
 
@@ -472,9 +466,9 @@ function getPointerPositionOnCanvas(canvas, event) {
 }
 
 /**
- * Description.
- * @param var Description
- * @return var Description
+ * Displays a lose message for the given player. Removes all action buttons (to prevent 
+ * weird game states).
+ * @param var player The player who lost (a number)
  */
 function loseGame(player) {
     alert("Player " + player.toString() + " has lost the game!");
