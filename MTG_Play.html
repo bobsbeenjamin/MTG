@@ -3,7 +3,7 @@
 <head>
   <title>Play you some MTG</title>
   <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
-  <script src="MTG_scripts.js"></script>
+  <script src="MTG_Play_scripts.js"></script>
 </head>
 <body>
   <div id="player1_txt">Player 1</div>
@@ -16,11 +16,13 @@
   <canvas id="battlefield" width="840" height="312" style="border:2px solid #000000;"></canvas>
   <canvas id="cardzoom" width="223" height="312"></canvas>
   <br/>
-  <div id="player2_txt">Player 2</div>
+  <span id="player2_txt" width="840px">Player 2</span>
+  <span id="status_txt" width="223px">Status</span>
+  <br/>
   <canvas id="bottomHand" width="840" height="104" style="border:2px solid #000000;"></canvas>
   <br/>
   <button id="player2_draw" onclick=button_drawCard(deck2,hand2,2);>Draw card</button>
   <button id="player2_shuffle" onclick=shuffle(deck2);>Shuffle Deck</button>
-  <button id="reset" onclick="window.location.reload(false)">Reset Everything</button>
+  <button id="test" onclick=testFunction();>Test</button>
 </body>
 </html>
