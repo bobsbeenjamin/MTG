@@ -17,19 +17,19 @@ if not os.path.isfile(inputFileName):
 
 # Variables for the main loop
 jsLines = ""
-look = 0
+cardProperty = 0
 cardLine = 0
 # Open input file and process it
 with open(inputFileName) as file:
     # Main loop
     for line in file:
-        if not look and '<span class="cardTitle">' in line:
-            look = 1
+        if cardProperty==0 and '<span class="cardTitle">' in line:
+            cardProperty = 1
             continue
         if cardLine:
             cardLine += 1
         ### Name and Multiverse Id ###
-        if look==1 and "?multiverseid=" in line:
+        if cardProperty==1 and "?multiverseid=" in line:
             idx1 = line.index("?multiverseid=") + 14
             idx2 = idx1 + 6
             mvid = line[idx1:idx2]
@@ -37,10 +37,11 @@ with open(inputFileName) as file:
             idx2 = line.index("</a>")
             name = line[idx1:idx2]
             jsLines += '\t\t{name:"'+ name + '", mvid:' + mvid + '}, \n'
-            look = 2
+            cardProperty = 2
             cardLine = 1
         ### Mana cost ###
-        if look==2 and cardLine==2:
+        if cardProperty==2 and cardLine==2:
+            # Create a list of indices where alt attributes start
             idxList = [i for i,_ in enumerate(line[:-5]) if line[i:i+5]=='alt="']
             manaCost = ""
             for idx in idxList:
@@ -57,40 +58,42 @@ with open(inputFileName) as file:
             cmc = line[idx1:idx2]
             jsLines = jsLines[:-4] + ', manaCost:"' + manaCost
             jsLines += '", cmc:' + cmc + '}, \n'
-            look = 3
+            cardProperty = 3
             cardLine = 1
         ### Card types ###
-        if look==3 and cardLine==4:
+        if cardProperty==3 and cardLine==4:
             types = line.strip()
             # Replace double space with single space (gatherer has a weird
             # double space before the long dash)
             types = types.replace("  ", " ")
             jsLines = jsLines[:-4] + ', types:"'  + types + '"}, \n'
-            # Don't update look yet, because we might need the next line
+            # Don't update cardProperty yet, because we might need the next line
         ### Power/Toughness or Loyalty ###
-        if look==3 and cardLine==5:
+        if cardProperty==3 and cardLine==5:
             if "Creature" in types or "Planeswalker" in types:
                 ptl = line.strip()[:-7] # EOL is "</span>"
                 ptl = ptl.strip('()') # Paren are not needed or wanted
             else:
                 ptl = ""
             jsLines = jsLines[:-4] + ', powerToughness_Loyalty:"' + ptl + '"}, \n'
-            look = 4
+            cardProperty = 4
         ### Rules text ###
-        if look==4 and 'class="rulesText"' in line:
-            look = 5
+        if cardProperty==4 and 'class="rulesText"' in line:
+            cardProperty = 5
             cardLine = 1
-        if look==5 and cardLine==2:
+        if cardProperty==5 and cardLine==2:
             rulesText = line.strip()[:-6] # Chop off "</div>"
             # Escape quotes
             rulesText = rulesText.replace('"', '\\"')
-            # Replace energy, tap, and mana symbols
+            # Complete and fix the image URL for energy, tap, and mana symbols
             if "/Handlers/" in rulesText:
                 rulesText = rulesText.replace("/Handlers/",
                     imgStr_Front + "/Handlers/")
                 rulesText = rulesText.replace("&amp;", "&")
             jsLines = jsLines[:-4] + ', rulesText:"' + rulesText + '"}, \n'
-            look = 0; cardLine = 0 # reset for next card
+            # Reset for next card
+            cardProperty = 0
+            cardLine = 0
 
 # Select output file name and write it
 outputOption = raw_input("Choose rarity (M=Mythics, R=Rares, U=Uncommons, "
