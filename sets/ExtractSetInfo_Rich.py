@@ -1,38 +1,26 @@
+import os
+
 # Constants
-fileName = "cardSearchResults.html"
-oldImgStr_Front = "./Card Search - Search_ +_Aether Revolt_ - Gatherer - Magic_ The Gathering_files/Image("
-oldImgStr_Back = ").ashx"
-newImgStr_Front = "http://gatherer.wizards.com/Handlers/Image.ashx?size=small&name="
-newImgStr_Back = "&type=symbol"
-# NOTE: You will need to update this for each Gatherer search.  :(
-# The best way to do this is to simply run this script, search the output file
-# for "Image(", look at which number should be replaced with which symbol, then
-# make the changes to the keys below. (999 means don't care)
-imageMap = {
-    15:"e", # Energy
-    21:"tap", # Tap
-    9:"1", # 1
-    999:"2", # 2
-    6:"3", # 3
-    13:"4", # 4
-    22:"5", # 5
-    999:"6", # 6
-    65:"7", # 7
-    28:"8", # 8
-    2:"W", # White
-    14:"U", # Blue
-    8:"B", # Black
-    30:"R", # Red
-    37:"G", # Green
-    55:"C", # Colorless
-    999:"X" # X generic
-}
-# Variables for loop
-jsLines = "\r"
+inputFileName = "cardSearchResults.html"
+imgStr_Front = "http://gatherer.wizards.com"
+mythicsFname = "Mythics.js"
+raresFname = "Rares.js"
+uncommonsFname = "Uncommons.js"
+commonsFname = "Commons.js"
+commons2Fname = "Commons2.js"
+
+# Check that file exists
+if not os.path.isfile(inputFileName):
+    raw_input("Please save your Gatherer search results in a file named "
+        + inputFileName + " and try again")
+    exit()
+
+# Variables for the main loop
+jsLines = ""
 look = 0
 cardLine = 0
-# Open file for processing
-with open(fileName) as file:
+# Open input file and process it
+with open(inputFileName) as file:
     # Main loop
     for line in file:
         if not look and '<span class="cardTitle">' in line:
@@ -40,7 +28,7 @@ with open(fileName) as file:
             continue
         if cardLine:
             cardLine += 1
-        # Name and Multiverse Id
+        ### Name and Multiverse Id ###
         if look==1 and "?multiverseid=" in line:
             idx1 = line.index("?multiverseid=") + 14
             idx2 = idx1 + 6
@@ -48,10 +36,10 @@ with open(fileName) as file:
             idx1 += 8
             idx2 = line.index("</a>")
             name = line[idx1:idx2]
-            jsLines += '\t\t{name:"'+ name + '", mvid:' + mvid + '}, \r'
+            jsLines += '\t\t{name:"'+ name + '", mvid:' + mvid + '}, \n'
             look = 2
             cardLine = 1
-        # Mana cost
+        ### Mana cost ###
         if look==2 and cardLine==2:
             idxList = [i for i,_ in enumerate(line[:-5]) if line[i:i+5]=='alt="']
             manaCost = ""
@@ -68,24 +56,27 @@ with open(fileName) as file:
             idx2 = len(line.rstrip()) - 8 # End of line is "</span>)"
             cmc = line[idx1:idx2]
             jsLines = jsLines[:-4] + ', manaCost:"' + manaCost
-            jsLines += '", cmc:' + cmc + '}, \r'
+            jsLines += '", cmc:' + cmc + '}, \n'
             look = 3
             cardLine = 1
-        # Card types
+        ### Card types ###
         if look==3 and cardLine==4:
             types = line.strip()
-            jsLines = jsLines[:-4] + ', types:"'  + types + '"}, \r'
+            # Replace double space with single space (gatherer has a weird
+            # double space before the long dash)
+            types = types.replace("  ", " ")
+            jsLines = jsLines[:-4] + ', types:"'  + types + '"}, \n'
             # Don't update look yet, because we might need the next line
-        # Power/Toughness or Loyalty
+        ### Power/Toughness or Loyalty ###
         if look==3 and cardLine==5:
             if "Creature" in types or "Planeswalker" in types:
                 ptl = line.strip()[:-7] # EOL is "</span>"
                 ptl = ptl.strip('()') # Paren are not needed or wanted
             else:
                 ptl = ""
-            jsLines = jsLines[:-4] + ', powerToughness_Loyalty:"' + ptl + '"}, \r'
+            jsLines = jsLines[:-4] + ', powerToughness_Loyalty:"' + ptl + '"}, \n'
             look = 4
-        # Rules text
+        ### Rules text ###
         if look==4 and 'class="rulesText"' in line:
             look = 5
             cardLine = 1
@@ -94,14 +85,77 @@ with open(fileName) as file:
             # Escape quotes
             rulesText = rulesText.replace('"', '\\"')
             # Replace energy, tap, and mana symbols
-            if oldImgStr_Front in rulesText:
-                for imgKey, imgVal in imageMap.iteritems():
-                    oldImg = oldImgStr_Front + str(imgKey) + oldImgStr_Back
-                    newImg = newImgStr_Front + imgVal + newImgStr_Back
-                    rulesText = rulesText.replace(oldImg, newImg)
-            jsLines = jsLines[:-4] + ', rulesText:"' + rulesText + '"}, \r'
+            if "/Handlers/" in rulesText:
+                rulesText = rulesText.replace("/Handlers/",
+                    imgStr_Front + "/Handlers/")
+                rulesText = rulesText.replace("&amp;", "&")
+            jsLines = jsLines[:-4] + ', rulesText:"' + rulesText + '"}, \n'
             look = 0; cardLine = 0 # reset for next card
-fileName = "output.js"
-with open(fileName, 'w') as file:
+
+# Select output file name and write it
+outputOption = raw_input("Choose rarity (M=Mythics, R=Rares, U=Uncommons, "
+    + "C=Commons, C2=2nd Commons File): ")
+outputOption = outputOption.upper()
+if outputOption == 'M':
+    outputFileName = mythicsFname
+elif outputOption == 'R':
+    outputFileName = raresFname
+elif outputOption == 'U':
+    outputFileName = uncommonsFname
+elif outputOption == 'C':
+    outputFileName = commonsFname
+elif outputOption == "C2":
+    outputFileName = commons2Fname
+else:
+    print "Bad input for rarity"
+    exit()
+with open(outputFileName, 'w') as file:
     file.write(jsLines)
+
+# If all appropriate files have been created, then create the combined file
+if os.path.isfile(mythicsFname) and os.path.isfile(raresFname) and \
+    os.path.isfile(uncommonsFname) and os.path.isfile(commonsFname):
+    fileNameProcessingList = [
+        ["mythicPool", mythicsFname],
+        ["rarePool", raresFname],
+        ["uncommonPool", uncommonsFname],
+        ["commonPool", commonsFname]
+    ]
+    # Add the 2nd search results file for commons to the common pool list
+    if os.path.isfile(commons2Fname):
+        fileNameProcessingList[3].append(commons2Fname)
+    # Get the set id for the beginning of the file
+    setId = raw_input("What is the 3 letter set code for this set? ")
+    # Start the set object (this time, jsLines is an array of strings, instead
+    # of one long string)
+    jsLines = ["var " + setId + " = {\n"]
+    # Build the set object, one rarity at a time
+    for rarityItem in fileNameProcessingList:
+        jsLines.append('\t"' + rarityItem[0] + '": [\n')
+        with open(rarityItem[1]) as file:
+            singleRarityFileContents = file.readlines()
+        # Handle the 2nd common file, if needed
+        if len(rarityItem) > 2:
+            # Add the contents of the first common file, then read the second
+            jsLines += (singleRarityFileContents)
+            with open(rarityItem[2]) as file:
+                singleRarityFileContents = file.readlines()
+        # Chop the last 3 characters off the last line (", \n")
+        lastLine = singleRarityFileContents.pop()
+        lastLine = lastLine[:-3] + "\n"
+        singleRarityFileContents.append(lastLine)
+        jsLines += (singleRarityFileContents)
+        # Add "    ]" to the end of the file, or "    ], " if the we're still
+        # building the file
+        if rarityItem[0] == "commonPool":
+            jsLines.append("\t]\n")
+        else:
+            jsLines.append("\t], \n")
+    # Close off the set object
+    jsLines.append("}")
+    setFileName = setId + ".js"
+    with open(setFileName, 'w') as file:
+        file.writelines(jsLines)
+
+# Pause
 endOfScript = raw_input("The data has been extracted. Press Enter to exit.")
