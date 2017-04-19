@@ -215,7 +215,7 @@ function displayEverything() {
  * Displays all cards in cardPool and defines cardArea for each card displayed.
  */
 function displayCardPool1() {
-	displayOneCanvas(canvas_cardPool1, context_cardPool1, cardPool1);
+	displayOneCanvas(canvas_cardPool1, context_cardPool1, cardPool1, cardPoolGroupBy1);
 }
 
 /**
@@ -236,7 +236,7 @@ function displayHand1() {
 /**
  * Displays all cards in collection and defines cardArea for each card displayed.
  */
-function displayOneCanvas(canvas, context, collection) {
+function displayOneCanvas(canvas, context, collection, grouping1) {
 	/*** Display card groupings ***/
 	if (collection.hasOwnProperty("groups")) {
 		// Set the collection to its groups property (for easier code below)
@@ -251,21 +251,36 @@ function displayOneCanvas(canvas, context, collection) {
 			? Object.keys(collection).length 
 			: collection.length;
 		canvas.width = ((cardWidth + 4) * numCols) + (offset_Left * totalNumCards);
-		/*** Determine the size of the largest group ***/
+		// Determine the size of the largest group
 		let largestGroup = 0;
 		for (let group in collection) {
 			let groupLength = collection[group].length;
 			largestGroup = (groupLength > largestGroup) ? groupLength : largestGroup;
 		}
-		canvas.height = (offset_Top * largestGroup) + cardHeight + 4;
+		const titleHeight = 9;
+		canvas.height = (offset_Top * (largestGroup-1)) + cardHeight + titleHeight + 5;
 		/*** Clear the canvas ***/
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		/*** Display the collection (as a grid of groups) ***/
 		let leftBorder = 2;
 		for (let groupIterator in collection) {
+			// Easier to work with groups than the entire collection
 			let group = collection[groupIterator];
+			// Display group info above the group
+			let firstCard = group[0];
+			let groupTitle = "";
+			if (typeof(firstCard.grouping1) == "number") {
+				groupTitle = grouping1.options[grouping1.selectedIndex].text 
+					+ ": " + firstCard[grouping1.value]
+			}
+			// For now, don't display "Card Type"
+			else {
+				groupTitle = getSortVal(firstCard, grouping1.value);
+			}
+			context.fillText(groupTitle, leftBorder, titleHeight);
+			// Display each card in the group
 			for (let card=0; card<group.length; card++) {
-				let topBorder = offset_Top * card + 2;
+				let topBorder = offset_Top * card + titleHeight + 3;
 				group[card].cardArea = getCardArea(leftBorder, topBorder);
 				displayCard(group[card], context, leftBorder, topBorder);
 				leftBorder += offset_Left;

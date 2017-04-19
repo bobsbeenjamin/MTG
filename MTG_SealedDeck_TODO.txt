@@ -6,8 +6,14 @@ Note: The seed of this project was my initial attempt at implementing Magic in a
 TODOs: 
 	User-defined sorting and grouping
 		Should each dropdown give sort and group options?
-		Display group info (card type, CMC, etc) above each group
 		Link options (make selection from sort 1 modify options for sort 2, etc)
+		Break up large groups?
+		Fix bugs of displaying group info
+			Long dash (—) shows as somthing else (probably a UTF-8 issue)
+			Promo and Mythic are lumped together
+			Long Card Type names run out of room
+			Color shows as color code (W for White, etc)
+			Title text is too small
 	2HG
 		Support 2HG
 	Deckbuilding stats
@@ -28,6 +34,7 @@ Done:
 		Fix alphabetical sort (only works with 2 sort options)
 		Add support for groupings
 		Impliment groupings for card type
+		Display group info (card type, CMC, etc) above each group
 	Hand similator
 		Add basic lands
 		Draw opening hands
