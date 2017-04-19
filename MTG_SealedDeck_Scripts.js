@@ -237,31 +237,33 @@ function displayHand1() {
  * Displays all cards in collection and defines cardArea for each card displayed.
  */
 function displayOneCanvas(canvas, context, collection) {
-	// Display card groupings
+	/*** Display card groupings ***/
 	if (collection.hasOwnProperty("groups")) {
-		// Set collection to its groups property, for easier code
+		// Set the collection to its groups property (for easier code below)
 		collection = collection.groups;
-		// Get total number of cards (for left offset)
+		/*** Get total number of cards (for left offset) ***/
 		let totalNumCards = 0;
-		for (let group=0; group<collection.length; group++) {
+		for (let group in collection) {
 			totalNumCards += collection[group].length;
 		}
-		// Recalculate canvas size
-		let numCols = collection.length;
+		/*** Recalculate canvas size ***/
+		let numCols = (typeof(collection) == "object") 
+			? Object.keys(collection).length 
+			: collection.length;
 		canvas.width = ((cardWidth + 4) * numCols) + (offset_Left * totalNumCards);
-		// Determine the size of the largest group
+		/*** Determine the size of the largest group ***/
 		let largestGroup = 0;
-		for (let group=0; group<collection.length; group++) {
+		for (let group in collection) {
 			let groupLength = collection[group].length;
 			largestGroup = (groupLength > largestGroup) ? groupLength : largestGroup;
 		}
 		canvas.height = (offset_Top * largestGroup) + cardHeight + 4;
-		// Clear canvas
+		/*** Clear the canvas ***/
 		context.clearRect(0, 0, canvas.width, canvas.height);
-		// Display collection by group
+		/*** Display the collection (as a grid of groups) ***/
 		let leftBorder = 2;
-		for (let groupIdx=0; groupIdx<collection.length; groupIdx++) {
-			let group = collection[groupIdx];
+		for (let groupIterator in collection) {
+			let group = collection[groupIterator];
 			for (let card=0; card<group.length; card++) {
 				let topBorder = offset_Top * card + 2;
 				group[card].cardArea = getCardArea(leftBorder, topBorder);
@@ -272,16 +274,16 @@ function displayOneCanvas(canvas, context, collection) {
 			leftBorder += cardWidth + 4;
 		}
 	}
-	// Display individual cards
+	/*** Display individual cards ***/
 	else {
-		// Recalculate canvas size
+		/*** Recalculate canvas size ***/
 		let numRows = Math.ceil(collection.length / 8);
 		// Make sure that an empty row is displayed for an empty collection
 		numRows = (numRows == 0) ? 1 : numRows;
 		canvas.height = (cardHeight + 4) * numRows + 2;
-		// Clear canvas
+		/*** Clear the canvas ***/
 		context.clearRect(0, 0, canvas.width, canvas.height);
-		// Display collection
+		/*** Display the collection (as a grid of cards) ***/
 		let row = -1;
 		for (let card=0; card<collection.length; card++) {
 			if (card%8 == 0)
@@ -401,7 +403,9 @@ function sortCards(collection, collectionStr, filter1, filter2, grouping1) {
 		let groups = [];
 		// Group based on numbered slots
 		if (typeof(collection[0].grouping1) == "number") {
-			// Make an array of 17 empty arrays (16 is the biggest possible value)
+			// Make an array of 17 empty arrays (16 is the biggest possible value; the 
+			// largest CMC of any black-bordered card is 16, and color and rarity each 
+			// have less possibilities)
 			groups = [
 				[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
 			];
@@ -417,16 +421,38 @@ function sortCards(collection, collectionStr, filter1, filter2, grouping1) {
 					nonEmptyGroups.push(groups[idx]);
 			}
 			groups = nonEmptyGroups;
+			// Sort each group
+			groups.forEach(function(group) {
+				group.sort(function(card1, card2){ return compareCards(card1, card2); });
+			});
 		}
 		// Group using card type logic
 		else {
-			// TODO: Fill me in
+			// Use a dictionary (JS object) instead of an array
+			groups = {};
+			// Push each card into the sub-array of the appropriate dictionary item
+			// (create needed items on the fly)
+			collection.forEach(function(card) {
+				// Use cardType as the dictionary key
+				let cardType = card.grouping1;
+				// Add this card to the appropriate dictionary's sub-array
+				if (groups.hasOwnProperty(cardType)) {
+					groups[cardType].push(card);
+				}
+				// Add a new key to the dictionary, and initialize its value to an array 
+				// with this card as its only item
+				else {
+					groups[cardType] = [card];
+				}
+			});
+			// Sort each group
+			for (let group in groups) {
+				groups[group].sort(function(card1, card2){ 
+					return compareCards(card1, card2); 
+				});
+			};
 		}
-		// Sort each group
-		groups.forEach(function(group) {
-			group.sort(function(card1, card2){ return compareCards(card1, card2); });
-		});
-		// Group the collection
+		// Add the groupings as a property of the collection (used by displayOneCanvas())
 		collection.groups = groups;
 	}
 	// Simply sort the cards, using the compareCards function to compare 2 cards

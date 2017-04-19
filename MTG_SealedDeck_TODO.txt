@@ -4,25 +4,30 @@ Time: 90 hrs
 Note: The seed of this project was my initial attempt at implementing Magic in a browser.
 
 TODOs: 
-	Allow user-defined sorting
-		Add groupings
+	User-defined sorting and grouping
 		Should each dropdown give sort and group options?
+		Display group info (card type, CMC, etc) above each group
 		Link options (make selection from sort 1 modify options for sort 2, etc)
-	Support 2HG
+	2HG
+		Support 2HG
 	Deckbuilding stats
 		Display updated stats live
 		Card count, Mana curve, Color info
-	Store additional card info
+	Additional card info
 		Display below cardZoom
 	Mobile support
 		Card popup on long press
 		Adapt card size and canvas size for card pool and deck
 		
 Done: 
-	Store additional card info
-		Get color
-	Allow user-defined sorting
+	Additional card info
+		Store additional card info
+		Get and store color
+	User-defined sorting and grouping
+		Allow user-defined sorting
 		Fix alphabetical sort (only works with 2 sort options)
+		Add support for groupings
+		Impliment groupings for card type
 	Hand similator
 		Add basic lands
 		Draw opening hands
@@ -30,5 +35,6 @@ Done:
 		Display cardpool correctly after viewing hand
 		Add mulligan button
 		Add "Draw New Hand" button
-	Why does page sometime give "Wait" prompt? (This went away by itself)
-	Change verbiage from draft to sealed
+	Misc
+		Why does page sometime give "Wait" prompt? (This went away by itself)
+		Change verbiage from draft to sealed
