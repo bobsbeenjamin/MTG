@@ -15,17 +15,34 @@ if not os.path.isfile(inputFileName):
         + inputFileName + " and try again")
     exit()
 
+# Identify rarity
+rarity = raw_input("Choose rarity (M=Mythics, R=Rares, U=Uncommons, C=Commons, "
+    + "C2=2nd Commons File): ")
+rarity = rarity.upper()
+if rarity not in ['M', 'R', 'U', 'C', "C2"]:
+    print "Bad input for rarity (program will exit)"
+    exit()
+
 # Variables for the main loop
 jsLines = ""
 cardProperty = 0
 cardLine = 0
+splitCard = False
 # Open input file and process it
 with open(inputFileName) as file:
     # Main loop
     for line in file:
+        ### Start processing a new card ###
         if cardProperty==0 and '<span class="cardTitle">' in line:
-            cardProperty = 1
+            # Skip the second search result for this split card
+            if splitCard:
+                splitCard = False
+            # Get ready to process this card
+            else:
+                cardProperty = 1
             continue
+        # The processing of some properties should wait until a few lines have 
+        # been skipped
         if cardLine:
             cardLine += 1
         ### Name and Multiverse Id ###
@@ -36,7 +53,14 @@ with open(inputFileName) as file:
             idx1 += 8
             idx2 = line.index("</a>")
             name = line[idx1:idx2]
-            jsLines += '\t\t{name:"'+ name + '", mvid:' + mvid + '}, \n'
+            # Handle split cards
+            if "//" in name:
+               idx1 = name.index(">") + 1
+               # Chop off card-specific name (Example: "Dusk // Dawn (Dawn)")
+               idx2 = name.index("(") - 1
+               name = name[idx1:idx2]
+               splitCard = True
+            jsLines += '\t\t{name:"'+ name + '", mvid:' + mvid
             cardProperty = 2
             cardLine = 1
         ### Mana cost ###
@@ -56,8 +80,8 @@ with open(inputFileName) as file:
             idx1 = line.index("convertedManaCost") + 19 # Includes '">'
             idx2 = len(line.rstrip()) - 8 # End of line is "</span>)"
             cmc = line[idx1:idx2]
-            jsLines = jsLines[:-4] + ', manaCost:"' + manaCost
-            jsLines += '", cmc:' + cmc + '}, \n'
+            jsLines += ', manaCost:"' + manaCost
+            jsLines += '", cmc:' + cmc
             cardProperty = 3
             cardLine = 1
         ### Card types ###
@@ -66,7 +90,7 @@ with open(inputFileName) as file:
             # Replace double space with single space (gatherer has a weird
             # double space before the long dash)
             types = types.replace("  ", " ")
-            jsLines = jsLines[:-4] + ', types:"'  + types + '"}, \n'
+            jsLines += ', types:"' + types
             # Don't update cardProperty yet, because we might need the next line
         ### Power/Toughness or Loyalty ###
         if cardProperty==3 and cardLine==5:
@@ -75,8 +99,10 @@ with open(inputFileName) as file:
                 ptl = ptl.strip('()') # Paren are not needed or wanted
             else:
                 ptl = ""
-            jsLines = jsLines[:-4] + ', powerToughness_Loyalty:"' + ptl + '"}, \n'
+            jsLines += ', powerToughness_Loyalty:"' + ptl
             cardProperty = 4
+        ### Rarity ###
+        jsLines += ', rarity:"' + rarity
         ### Rules text ###
         if cardProperty==4 and 'class="rulesText"' in line:
             cardProperty = 5
@@ -90,34 +116,34 @@ with open(inputFileName) as file:
                 rulesText = rulesText.replace("/Handlers/",
                     imgStr_Front + "/Handlers/")
                 rulesText = rulesText.replace("&amp;", "&")
-            jsLines = jsLines[:-4] + ', rulesText:"' + rulesText + '"}, \n'
+            jsLines += ', rulesText:"' + rulesText + '"}, \n'
             # Reset for next card
             cardProperty = 0
             cardLine = 0
 
-# Select output file name and write it
-outputOption = raw_input("Choose rarity (M=Mythics, R=Rares, U=Uncommons, "
-    + "C=Commons, C2=2nd Commons File): ")
-outputOption = outputOption.upper()
-if outputOption == 'M':
+# Select output file name and write the output file for this rarity
+if rarity == 'M':
     outputFileName = mythicsFname
-elif outputOption == 'R':
+elif rarity == 'R':
     outputFileName = raresFname
-elif outputOption == 'U':
+elif rarity == 'U':
     outputFileName = uncommonsFname
-elif outputOption == 'C':
+elif rarity == 'C':
     outputFileName = commonsFname
-elif outputOption == "C2":
+elif rarity == "C2":
     outputFileName = commons2Fname
+# This should have been caught earlier, but I'm leaving it defensively
 else:
     print "Bad input for rarity"
     exit()
 with open(outputFileName, 'w') as file:
     file.write(jsLines)
 
-# If all appropriate files have been created, then create the combined file
+# If all rarity files have been created, then create the combined set file
+print "All rarities have been extracted. The set js file is being generated..."
 if os.path.isfile(mythicsFname) and os.path.isfile(raresFname) and \
     os.path.isfile(uncommonsFname) and os.path.isfile(commonsFname):
+    ### Set up to create a set JS object ###
     fileNameProcessingList = [
         ["mythicPool", mythicsFname],
         ["rarePool", raresFname],
@@ -129,10 +155,10 @@ if os.path.isfile(mythicsFname) and os.path.isfile(raresFname) and \
         fileNameProcessingList[3].append(commons2Fname)
     # Get the set id for the beginning of the file
     setId = raw_input("What is the 3 letter set code for this set? ")
-    # Start the set object (this time, jsLines is an array of strings, instead
-    # of one long string)
+    ### Start the set object ###
+    # (This time, jsLines is an array of strings, instead of one long string)
     jsLines = ["var " + setId + " = {\n"]
-    # Build the set object, one rarity at a time
+    ### Add the meat of the set object, one rarity at a time ###
     for rarityItem in fileNameProcessingList:
         jsLines.append('\t"' + rarityItem[0] + '": [\n')
         with open(rarityItem[1]) as file:
@@ -154,8 +180,45 @@ if os.path.isfile(mythicsFname) and os.path.isfile(raresFname) and \
             jsLines.append("\t]\n")
         else:
             jsLines.append("\t], \n")
-    # Close off the set object
+    ### Close off the set object ###
     jsLines.append("}")
+    ### Handle duplicate cards ###
+    # (Duplicates happen when old cards are reprinted in a new set with a 
+    # different rarity)
+    cardNames = []
+    cardLineNums = []
+    dupsFound = 0
+    newJsLines = jsLines[:] # copy
+    for lineNum, line in enumerate(jsLines):
+        if not line.startswith("\t\t{"):
+            continue
+        idx1 = line.index("name:") + 6
+        idx2 = line.index("mvid:") - 3
+        name = line[idx1:idx2]
+        if name in cardNames:
+            # Have user determine appropriate rarity
+            rarity = raw_input("What is the appropriate rarity for " 
+                + name + "? (M=Mythic, R=Rare, U=Uncommon, C=Common")
+            if rarity not in ['M', 'R', 'U', 'C']:
+                print "Bad input for rarity (this duplicate will remain)"
+                continue
+            # Determine which line number to keep and which to eliminate
+            idx1 = line.index("rarity:") + 7
+            idx2 = idx1 + 1
+            lineRarity = line[idx1:idx2]
+            if lineRarity == rarity:
+                lineToDelete = lineNum
+            else:
+                lineToDelete = cardLineNums[cardNames.index(name)]
+            lineToDelete -= dupsFound
+            # Eliminate the appropriate line
+            newJsLines.pop(lineToDelete)
+            dupsFound += 1
+        else:
+            cardNames.append(name)
+            cardLineNums.append(lineNum)
+    jsLines = newJsLines
+    # Write the set file
     setFileName = setId + ".js"
     with open(setFileName, 'w') as file:
         file.writelines(jsLines)
