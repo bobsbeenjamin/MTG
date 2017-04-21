@@ -18,7 +18,7 @@ if not os.path.isfile(inputFileName):
 # Identify rarity
 rarity = raw_input("Choose rarity (M=Mythics, R=Rares, U=Uncommons, C=Commons, "
     + "C2=2nd Commons File): ")
-rarity = rarity.upper()
+rarity = str(rarity).upper()
 if rarity not in ['M', 'R', 'U', 'C', "C2"]:
     print "Bad input for rarity (program will exit)"
     exit()
@@ -210,13 +210,13 @@ if os.path.isfile(mythicsFname) and os.path.isfile(raresFname) and \
                 print "Bad input for rarity (this duplicate will remain)"
                 continue
             # Determine which line number to keep and which to eliminate
-            idx1 = line.index("rarity:") + 7
+            idx1 = line.index("rarity:") + 8
             idx2 = idx1 + 1
             lineRarity = line[idx1:idx2]
             if lineRarity == rarity:
-                lineToDelete = lineNum
-            else:
                 lineToDelete = cardLineNums[cardNames.index(name)]
+            else:
+                lineToDelete = lineNum
             lineToDelete -= dupsFound
             # Eliminate the appropriate line
             newJsLines.pop(lineToDelete)
