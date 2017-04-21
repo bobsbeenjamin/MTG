@@ -109,33 +109,46 @@ function setUpGame() {
  * Fills the cardPool variables (currently cardPool1).
  */
 function createCardPool() {
-	// Add the prerelease promo card (randomly selected rare or mythic)
-	var cardPool = AER;
-	var promoPool = cardPool.mythicPool.concat(cardPool.rarePool);
-	var promoCard = getIndividualCard(promoPool, "Promo", insertPos);
-	cardPool1.push(promoCard);
-	// Create 4 packs from small set
-	for (var i=0; i<4; i++) {
-		cardPool1 = cardPool1.concat( createPack(cardPool) );
+	// Get the set or block to generate a pool from
+	var cardPool = readCardPools();
+	// Single set
+	if (typeof(cardPool) == "object") {
+		// Add the prerelease promo card (randomly selected rare or mythic)
+		var promoPool = cardPool.mythicPool.concat(cardPool.rarePool);
+		var promoCard = getIndividualCard(promoPool, "Promo", insertPos);
+		cardPool1.push(promoCard);
+		// Create 6 packs
+		for (var i=0; i<6; i++) {
+			cardPool1 = cardPool1.concat( createPack(cardPool) );
+		}
 	}
-	// Create 2 packs from large set
-	cardPool = KLD;
-	for (var i=0; i<2; i++) {
-		cardPool1 = cardPool1.concat( createPack(cardPool) );
+	// Block (currently, this is always 2 sets)
+	else {
+		var set = cardPool[0];
+		// Add the prerelease promo card (randomly selected rare or mythic)
+		var promoPool = set.mythicPool.concat(set.rarePool);
+		var promoCard = getIndividualCard(promoPool, "Promo", insertPos);
+		cardPool1.push(promoCard);
+		// Create 4 packs from small set
+		for (var i=0; i<4; i++) {
+			cardPool1 = cardPool1.concat( createPack(set) );
+		}
+		// Create 2 packs from large set
+		set = cardPool[1];
+		for (var i=0; i<2; i++) {
+			cardPool1 = cardPool1.concat( createPack(set) );
+		}
 	}
 }
 
 /**
- * Grabs the card pools from already-included .js files, and adds colors to the cards.
- * [CURRENTLY UNUSED]
+ * Grabs the card pools from already-included .js files. This either returns a single 
+ * set, or an array of sets that represent a block.
  */
 function readCardPools() {
 	var cardSets = [KLD, AER];
-	for (var set in cardSets) {
-		for (var card in set) {
-			card.color = getColor(card.manaCost);
-		}
-	}
+	// TODO: Let user select the set/block
+	cardSets = AKH;
 	return cardSets;
 }
 
@@ -472,6 +485,8 @@ function sortCards(collection, collectionStr, filter1, filter2, grouping1) {
 	}
 	// Simply sort the cards, using the compareCards function to compare 2 cards
 	else {
+		// In case we're getting rid of a grouping, delete it from the collection
+		delete collection.groups;
 		collection.sort(function(card1, card2){ return compareCards(card1, card2); });
 	}
 	// Redraw the sorted collection

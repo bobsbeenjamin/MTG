@@ -5,10 +5,11 @@ Note: The seed of this project was my initial attempt at implementing Magic in a
 
 TODOs: 
 	Set info
+		Add Amonkhet
+			Start with giving user an Amonkhet pool
+			Eventually, let the user select their format
 		Fix split cards
-			Names need special handling
-			Eliminate dups
-		Eliminate dups that happen when cards are reprinted in a new set with a different rarity
+			How to handle dups? (Mana cost, CMC, type, rules text)
 	User-defined sorting and grouping
 		Should each dropdown give sort and group options?
 		Link options (make selection from sort 1 modify options for sort 2, etc)
@@ -37,7 +38,11 @@ Done:
 	Set info
 		Automate the creation of card sets (implemented using gatherer searches and Python)
 		Scrape and store rich card info
-		Build Amonkhet
+		Build Amonkhet js object file
+		Fix split cards
+			Names need special handling
+			Eliminate dups
+		Eliminate dups that happen when cards are reprinted in a new set with a different rarity
 	User-defined sorting and grouping
 		Allow user-defined sorting
 		Fix alphabetical sort (only works with 2 sort options)
