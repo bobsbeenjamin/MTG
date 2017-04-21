@@ -28,6 +28,7 @@ jsLines = ""
 cardProperty = 0
 cardLine = 0
 splitCard = False
+rarityWasInserted = False
 # Open input file and process it
 with open(inputFileName) as file:
     # Main loop
@@ -80,7 +81,7 @@ with open(inputFileName) as file:
             idx1 = line.index("convertedManaCost") + 19 # Includes '">'
             idx2 = len(line.rstrip()) - 8 # End of line is "</span>)"
             cmc = line[idx1:idx2]
-            jsLines += ', manaCost:"' + manaCost
+            jsLines += ', manaCost:"' + manaCost # " added on next line
             jsLines += '", cmc:' + cmc
             cardProperty = 3
             cardLine = 1
@@ -90,7 +91,7 @@ with open(inputFileName) as file:
             # Replace double space with single space (gatherer has a weird
             # double space before the long dash)
             types = types.replace("  ", " ")
-            jsLines += ', types:"' + types
+            jsLines += ', types:"' + types + '"'
             # Don't update cardProperty yet, because we might need the next line
         ### Power/Toughness or Loyalty ###
         if cardProperty==3 and cardLine==5:
@@ -99,10 +100,13 @@ with open(inputFileName) as file:
                 ptl = ptl.strip('()') # Paren are not needed or wanted
             else:
                 ptl = ""
-            jsLines += ', powerToughness_Loyalty:"' + ptl
+            jsLines += ', powerToughness_Loyalty:"' + ptl + '"'
             cardProperty = 4
         ### Rarity ###
-        jsLines += ', rarity:"' + rarity
+        if cardProperty==4 and not rarityWasInserted:
+            # Only use the first char of the rarity string (to handle C2)
+            jsLines += ', rarity:"' + rarity[0] + '"'
+            rarityWasInserted = True
         ### Rules text ###
         if cardProperty==4 and 'class="rulesText"' in line:
             cardProperty = 5
@@ -120,6 +124,7 @@ with open(inputFileName) as file:
             # Reset for next card
             cardProperty = 0
             cardLine = 0
+            rarityWasInserted = False
 
 # Select output file name and write the output file for this rarity
 if rarity == 'M':
@@ -140,9 +145,10 @@ with open(outputFileName, 'w') as file:
     file.write(jsLines)
 
 # If all rarity files have been created, then create the combined set file
-print "All rarities have been extracted. The set js file is being generated..."
 if os.path.isfile(mythicsFname) and os.path.isfile(raresFname) and \
     os.path.isfile(uncommonsFname) and os.path.isfile(commonsFname):
+    print "All rarities have now been extracted."
+    print "The set js file is being generated..."
     ### Set up to create a set JS object ###
     fileNameProcessingList = [
         ["mythicPool", mythicsFname],
@@ -199,6 +205,7 @@ if os.path.isfile(mythicsFname) and os.path.isfile(raresFname) and \
             # Have user determine appropriate rarity
             rarity = raw_input("What is the appropriate rarity for " 
                 + name + "? (M=Mythic, R=Rare, U=Uncommon, C=Common")
+            rarity = rarity.upper()
             if rarity not in ['M', 'R', 'U', 'C']:
                 print "Bad input for rarity (this duplicate will remain)"
                 continue
