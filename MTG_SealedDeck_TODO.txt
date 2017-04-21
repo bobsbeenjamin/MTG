@@ -6,11 +6,12 @@ Note: The seed of this project was my initial attempt at implementing Magic in a
 TODOs: 
 	Set info
 		Add Amonkhet
-			Start with giving user an Amonkhet pool
 			Eventually, let the user select their format
 		Fix split cards
 			How to handle dups? (Mana cost, CMC, type, rules text)
 	User-defined sorting and grouping
+		Fix display/click issue: because cards are displayed asynchronously, cards don't overlap properly
+		Apply grouping functionality to deck (currently only works for cardpool)
 		Should each dropdown give sort and group options?
 		Link options (make selection from sort 1 modify options for sort 2, etc)
 		Break up large groups?
@@ -21,7 +22,7 @@ TODOs:
 			Color shows as color code (W for White, etc)
 			Title text is too small
 	2HG
-		Support 2HG
+		Add support for 2HG
 	Deckbuilding stats
 		Display updated stats live
 		Card count, Mana curve, Color info
@@ -30,6 +31,10 @@ TODOs:
 	Mobile support
 		Card popup on long press
 		Adapt card size and canvas size for card pool and deck
+	Hand similator
+		Add a battlefield canvas, and let the user "play" cards to the battlefield
+		Hide cardpool when the hand and battlefield are displayed
+		Add scry button
 		
 Done: 
 	Additional card info
@@ -43,6 +48,8 @@ Done:
 			Names need special handling
 			Eliminate dups
 		Eliminate dups that happen when cards are reprinted in a new set with a different rarity
+		Add Amonkhet
+			Start with giving user an Amonkhet pool
 	User-defined sorting and grouping
 		Allow user-defined sorting
 		Fix alphabetical sort (only works with 2 sort options)
