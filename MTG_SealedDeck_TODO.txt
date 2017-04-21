@@ -15,6 +15,9 @@ TODOs:
 		Should each dropdown give sort and group options?
 		Link options (make selection from sort 1 modify options for sort 2, etc)
 		Break up large groups?
+		Add new groupings:
+			[creature, non-creature]
+			[ground creature, evasive threat, removal, combat trick, card draw, mana accel, other non-land, land]
 		Fix bugs of displaying group info
 			Long dash (—) shows as somthing else (probably a UTF-8 issue)
 			Promo and Mythic are lumped together

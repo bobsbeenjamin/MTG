@@ -20,11 +20,15 @@
 	.hand {
 	  display: None; /* This class starts hidden, but is unhidden later */
 	}
+	label {
+	  font-size: 11pt;
+	}
   </style>
 </head>
 <body>
   <h2>Your Card Pool</h2>
   <h4>By default, your card pool is displayed in the order that you would open packs. Use the dropdowns to create your own sort.</h4>
+  <label for="cardPoolFilter1">Sort 1:</label>
   <select id="cardPoolFilter1"> <!-- onchange="button_sortCards(cardPool);"> -->
     <option value=""></option>
     <option value="color">Color</option>
@@ -32,6 +36,7 @@
     <option value="types">Card Type</option>
     <option value="rarity">Rarity</option>
   </select>
+  <label for="cardPoolFilter2">Sort 2:</label>
   <select id="cardPoolFilter2">
     <option value=""></option>
     <option value="color">Color</option>
@@ -39,8 +44,9 @@
     <option value="types">Card Type</option>
     <option value="rarity">Rarity</option>
   </select>
+  <label for="cardPoolGroupBy1">Group By:</label>
   <select id="cardPoolGroupBy1">
-    <option value=""></option>
+    <option value="" id="cardPoolGroupBy1_Default"></option>
     <!-- <option value="alphabetical">Card Name</option> -->
     <option value="color">Color</option>
     <option value="cmc">CMC</option>
@@ -54,6 +60,7 @@
   </canvas>
   <canvas id="cardZoom" width="223" height="312" style="position:fixed;float:right;"></canvas>
   <h2 class="deck">Your Deck</h2>
+  <label for="deck1Filter1">Sort by:</label>
   <select id="deck1Filter1" class="deck">
     <option value=""></option>
     <option value="color">Color</option>
@@ -61,8 +68,17 @@
     <option value="types">Card Type</option>
     <option value="rarity">Rarity</option>
   </select>
+  <label for="deck1Filter2">Then sort by:</label>
   <select id="deck1Filter2" class="deck">
     <option value=""></option>
+    <option value="color">Color</option>
+    <option value="cmc">CMC</option>
+    <option value="types">Card Type</option>
+    <option value="rarity">Rarity</option>
+  </select>
+  <label for="deck1GroupBy1">Group By:</label>
+  <select id="deck1GroupBy1">
+    <option value="" id="deck1GroupBy1_Default"></option>
     <option value="color">Color</option>
     <option value="cmc">CMC</option>
     <option value="types">Card Type</option>

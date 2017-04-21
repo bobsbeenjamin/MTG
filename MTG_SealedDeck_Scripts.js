@@ -27,6 +27,7 @@ var cardPoolFilter2 = null;
 var cardPoolGroupBy1 = null;
 var deck1Filter1 = null;
 var deck1Filter2 = null;
+var deck1GroupBy1 = null;
 var text_status = null;
 // offsets are used to "cascade" cards in a group
 const offset_Left = 0;
@@ -74,19 +75,24 @@ function setUpGame() {
 	text_player1 = document.getElementById("player1_txt");
 	text_player2 = document.getElementById("player2_txt");
 	text_status = document.getElementById("status_txt");
-	// Link dropdowns to the DOM
+	// Link dropdown variables to the DOM
 	cardPoolFilter1 = document.getElementById("cardPoolFilter1");
 	cardPoolFilter2 = document.getElementById("cardPoolFilter2");
 	cardPoolGroupBy1 = document.getElementById("cardPoolGroupBy1");
 	deck1Filter1 = document.getElementById("deck1Filter1");
 	deck1Filter2 = document.getElementById("deck1Filter2");
+	deck1GroupBy1 = document.getElementById("deck1GroupBy1");
 	// Register mouse events
 	canvas_cardPool1.addEventListener("click", function(){ 
-		handleScreenClick(canvas_cardPool1, event, cardPool1, deck1); });
+		handleScreenClick(canvas_cardPool1, event, cardPool1, deck1, 
+		document.getElementById("cardPoolGroupBy1_Default"));
+	});
 	canvas_cardPool1.addEventListener("mousemove", function(){ 
 		handleMouseHover(canvas_cardPool1, event, cardPool1); });
 	canvas_deck1.addEventListener("click", function(){ 
-		handleScreenClick(canvas_deck1, event, deck1, cardPool1); });
+		handleScreenClick(canvas_deck1, event, deck1, cardPool1, 
+		document.getElementById("deck1GroupBy1_Default"));
+	});
 	canvas_deck1.addEventListener("mousemove", function(){ 
 		handleMouseHover(canvas_deck1, event, deck1); });
 	// (No need to register a click event for the hand)
@@ -235,7 +241,7 @@ function displayCardPool1() {
  * Displays all cards in deck1 and defines cardArea for each card displayed.
  */
 function displayDeck1() {
-	displayOneCanvas(canvas_deck1, context_deck1, deck1);
+	displayOneCanvas(canvas_deck1, context_deck1, deck1, deck1GroupBy1);
 }
 
 /**
@@ -305,6 +311,7 @@ function displayOneCanvas(canvas, context, collection, grouping1) {
 	/*** Display individual cards ***/
 	else {
 		/*** Recalculate canvas size ***/
+		canvas.width = 832;
 		let numRows = Math.ceil(collection.length / 8);
 		// Make sure that an empty row is displayed for an empty collection
 		numRows = (numRows == 0) ? 1 : numRows;
@@ -411,7 +418,7 @@ function button_sortCards(collectionStr) {
 		sortCards(cardPool1, collectionStr, cardPoolFilter1, cardPoolFilter2, 
 			cardPoolGroupBy1);
 	if (collectionStr == "deck1")
-		sortCards(deck1, collectionStr, deck1Filter1, deck1Filter2, undefined);
+		sortCards(deck1, collectionStr, deck1Filter1, deck1Filter2, deck1GroupBy1);
 }
 
 /**
@@ -578,7 +585,8 @@ function button_drawCard(deck, hand, player) {
  * If the click was on a card in cardCollectionSrc, then it is removed from the source 
  * and added to cardCollectionDest.
  */
-function handleScreenClick(canvas, event, cardCollectionSrc, cardCollectionDest) {
+function handleScreenClick(
+	canvas, event, cardCollectionSrc, cardCollectionDest, groupingDefault) {
 	// Catch right click
 	if (event.button == 2) {
 		event.preventDefault();
@@ -591,6 +599,7 @@ function handleScreenClick(canvas, event, cardCollectionSrc, cardCollectionDest)
 		return;
 	card = cardCollectionSrc.splice(cardIdx, 1)[0];
 	cardCollectionDest.push(card);
+	//groupingDefault.selected = true;  // TODO: Fix this
 	displayEverything();
 }
 
