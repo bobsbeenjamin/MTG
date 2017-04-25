@@ -306,8 +306,10 @@ function displayOneCanvas(canvas, context, collection, grouping1) {
 			// Display each card in the group
 			for (let card=0; card<group.length; card++) {
 				let topBorder = offset_Top * card + titleHeight + 3;
-				group[card].cardArea = getCardArea(leftBorder, topBorder);
-				displayCard(group[card], context, leftBorder, topBorder);
+				// Set this based on whether this is the last card added (the top card)
+				let isNotTopCard = (card < group.length - 1);
+				group[card].cardArea = getCardArea(leftBorder, topBorder, isNotTopCard);
+				displayCard(group[card], context, leftBorder, topBorder, isNotTopCard);
 				leftBorder += offset_Left;
 			}
 			// Move left for next group
@@ -340,12 +342,19 @@ function displayOneCanvas(canvas, context, collection, grouping1) {
 /**
  * Returns an object that represents the area a card covers relative to its containing 
  * canvas.
+ * @param isNotTopCard {boolean} (optional) true if this card is not in a group, or if 
+ *     this card is the top (ie last) card in a group; false otherwise
  */
-function getCardArea(leftBorder, topBorder) {
-    return {left:leftBorder, 
-		right:leftBorder+cardWidth, 
+function getCardArea(leftBorder, topBorder, isNotTopCard=false) {
+	if (isNotTopCard)
+		var bottomBorder = topBorder + offset_Top;
+	else
+		var bottomBorder = topBorder + cardHeight;
+	return {left: leftBorder, 
+		right: leftBorder + cardWidth, 
 		top: topBorder, 
-		bottom: topBorder+cardHeight};
+		bottom: bottomBorder
+	};
 }
 
 /**
@@ -355,13 +364,18 @@ function getCardArea(leftBorder, topBorder) {
  * @param leftBorder {number} Number of pixels to the right of the left canvas edge
  * @param topBorder {number} Number of pixels below the top canvas edge
  */
-function displayCard(card, drawSpace, leftBorder, topBorder) {
-	/*****  First, draw the card in text form (as placholder) *****/
+function displayCard(card, drawSpace, leftBorder, topBorder, isNotTopCard=false) {
+	/*** Set card display height, based on whether this a botton card in a group ***/
+	if (isNotTopCard)
+		var displayHeight = offset_Top;
+	else
+		var displayHeight = cardHeight;
+	/***  First, draw the card in text form (as placholder) ***/
 	// blank out the drawing space
-	drawSpace.clearRect(leftBorder, topBorder, cardWidth, cardHeight);
+	drawSpace.clearRect(leftBorder, topBorder, cardWidth, displayHeight);
 	//// Draw placholder text  ////
 	// border
-	drawSpace.strokeRect(leftBorder, topBorder, cardWidth, cardHeight);
+	drawSpace.strokeRect(leftBorder, topBorder, cardWidth, displayHeight);
 	// name
 	drawSpace.fillText(card.name, leftBorder+3, topBorder+10);
 	// cost
@@ -381,17 +395,23 @@ function displayCard(card, drawSpace, leftBorder, topBorder) {
 		drawSpace.fillText(p_t, leftBorder+80, topBorder+95);
 	}
 	*/
-	/*****  Then, display the card nicely using gatherer *****/
+	/***  Then, display the card nicely using gatherer ***/
 	var cardImg = new Image();
 	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" 
 		+ card.mvid + "&type=card";
 	cardImg.onload = function() { 
-		drawSpace.drawImage(cardImg, leftBorder, topBorder, cardWidth, cardHeight);
-		if (card.rarity == "Promo") {
-			var strokeStyle = drawSpace.strokeStyle;
-			drawSpace.strokeStyle = "White";
-			drawSpace.strokeText("Promo Card", leftBorder+35, topBorder+75);
-			drawSpace.strokeStyle = strokeStyle;
+		if (isNotTopCard) {
+			drawSpace.drawImage(cardImg, 0, 0, 223, 35, leftBorder, topBorder, 
+				cardWidth, displayHeight);
+		}
+		else {
+			drawSpace.drawImage(cardImg, leftBorder, topBorder, cardWidth, cardHeight);
+			if (card.rarity == "Promo") {
+				var strokeStyle = drawSpace.strokeStyle;
+				drawSpace.strokeStyle = "White";
+				drawSpace.strokeText("Promo Card", leftBorder+35, topBorder+75);
+				drawSpace.strokeStyle = strokeStyle;
+			}
 		}
 	};
 }

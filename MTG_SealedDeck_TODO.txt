@@ -11,7 +11,6 @@ TODOs:
 			How to handle dups? (Mana cost, CMC, type, rules text)
 			Fix Promo stamp (unreadable on white and half-white cards)
 	User-defined sorting and grouping
-		Fix display/click issue: because cards are displayed asynchronously, cards don't overlap properly
 		Should each dropdown give sort and group options?
 		Link options (make selection from sort 1 modify options for sort 2, etc)
 		Break up large groups?
@@ -60,6 +59,7 @@ Done:
 		Impliment groupings for card type
 		Display group info (card type, CMC, etc) above each group
 		Apply grouping functionality to deck (currently only works for cardpool)
+		Fix display/click issue: because cards are displayed asynchronously, cards don't overlap properly
 	Hand similator
 		Add basic lands
 		Draw opening hands
