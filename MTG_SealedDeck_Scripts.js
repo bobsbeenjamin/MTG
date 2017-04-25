@@ -1,5 +1,5 @@
 /*
-Logic for Sealed Deck Project at https://github.com/bobsbeenjamin/MTG/
+Logic for Sealed Deck Project at https://github.com/bobsbeenjamin/MTG/MTG_SealedDeck.html
 */
 
 // UNUSED
@@ -419,7 +419,7 @@ function displayCard(card, drawSpace, leftBorder, topBorder, isNotTopCard=false)
 /**
  * Randomizes the cards in the deck, then returns it for convenience.
  * @param deck An array of card objects
- * @return deck The shuffled deck of cards
+ * @returns deck The shuffled deck of cards
  */
 function shuffle(deck) {
 	for (var i=deck.length-1; i>0; i--) {
@@ -440,17 +440,24 @@ function shuffle(deck) {
  * Handle a button click for one of the sorting buttons.
  */
 function button_sortCards(collectionStr) {
-	if (collectionStr == "cardPool1")
-		sortCards(cardPool1, collectionStr, cardPoolFilter1, cardPoolFilter2, 
-			cardPoolGroupBy1);
-	if (collectionStr == "deck1")
-		sortCards(deck1, collectionStr, deck1Filter1, deck1Filter2, deck1GroupBy1);
+	if (collectionStr == "cardPool1") {
+		// Sort the collection
+		sortCards(cardPool1, cardPoolFilter1, cardPoolFilter2, cardPoolGroupBy1);
+		// Redraw the sorted collection
+		displayCardPool1();
+	}
+	if (collectionStr == "deck1") {
+		// Sort the collection
+		sortCards(deck1, deck1Filter1, deck1Filter2, deck1GroupBy1);
+		// Redraw the sorted collection
+		displayDeck1();
+	}
 }
 
 /**
- * Sorts a collection and redraws it on canvas (cardPool and deck1 are the collections).
+ * Sorts a collection (currently, cardPool1 and deck1 are the valid collections).
  */
-function sortCards(collection, collectionStr, filter1, filter2, grouping1) {
+function sortCards(collection, filter1, filter2, grouping1) {
 	// Set the values of sort1, sort2, and grouping1 for each card in the collection
 	var sortVal = filter1.value;
 	collection.forEach(function(card) { card.sort1 = getSortVal(card, sortVal); });
@@ -522,11 +529,6 @@ function sortCards(collection, collectionStr, filter1, filter2, grouping1) {
 		delete collection.groups;
 		collection.sort(function(card1, card2){ return compareCards(card1, card2); });
 	}
-	// Redraw the sorted collection
-	if (collectionStr == "deck1")
-		displayDeck1();
-	else
-		displayCardPool1();
 }
 
 /**
@@ -621,10 +623,19 @@ function handleScreenClick(
 	}
 	var pointerPos = getPointerPositionOnCanvas(canvas, event);
 	var cardIdx = getCardByCoordinates(pointerPos.x, pointerPos.y, cardCollectionSrc);
+	// Don't worry about a click that's not on a card
 	if (cardIdx == null)
 		return;
 	card = cardCollectionSrc.splice(cardIdx, 1)[0];
 	cardCollectionDest.push(card);
+	// Redo the sort for each canvas where there is a grouping (otherwise the affected 
+	// group doesn't register that a card went missing or was added)
+	if (cardPoolGroupBy1.value.length > 0) {
+		sortCards(cardPool1, cardPoolFilter1, cardPoolFilter2, cardPoolGroupBy1);
+	}
+	if (deck1GroupBy1.value.length > 0) {
+		sortCards(deck1, deck1Filter1, deck1Filter2, deck1GroupBy1);
+	}
 	//groupingDefault.selected = true;  // TODO: Fix this
 	displayEverything();
 }
@@ -660,6 +671,7 @@ function handleMouseHover(canvas, event, cardCollection) {
 /**
  * Returns the index of the card in cardCollection that was clicked, or null if no card 
  * was clicked.
+ * NOTE: 
  * @param x The x variable from pointerPosition
  * @param y The y variable from pointerPosition
  * @param cardCollection The set of card objects to iterate over, each of which should 
@@ -826,7 +838,7 @@ function getPointerPositionOnCanvas(canvas, event) {
 /**
  * Returns an object's color, based on it's mana cost.
  * @param String manaCost
- * @return String color
+ * @returns String color
  */
 function getColor(manaCost) {
 	// Handle lands
@@ -850,8 +862,8 @@ function getColor(manaCost) {
 /**
  * Returns the full name of a color, given a one-character color indicator.
  * NOTE: This should probably be re-implemented as an object.
- * @param String color A single-character color indicator (ie, 'G' -> "Green")
- * @return String fullColor The full color name associated with the given color indicator
+ * @param {string} color A single-character color indicator (ie, 'G' -> "Green")
+ * @returns {string} fullColor The full color name associated with the given color indicator
  */
 function getFullColor(color) {
 	switch (color) {
@@ -871,7 +883,7 @@ function getFullColor(color) {
 /**
  * Description.
  * @param var Description
- * @return var Description
+ * @returns var Description
  */
 function template(variable) {
 	alert(JSON.stringify(card));

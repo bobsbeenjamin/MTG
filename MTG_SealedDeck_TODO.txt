@@ -17,7 +17,7 @@ TODOs:
 		Add new groupings:
 			[creature, non-creature]
 			[ground creature, evasive threat, removal, combat trick, card draw, mana accel, other non-land, land]
-		Fix bugs of displaying group info
+		Fix bugs of displaying group title
 			Long dash (—) shows as somthing else (probably a UTF-8 issue)
 			Promo and Mythic are lumped together
 			Long Card Type names run out of room
@@ -60,6 +60,7 @@ Done:
 		Display group info (card type, CMC, etc) above each group
 		Apply grouping functionality to deck (currently only works for cardpool)
 		Fix display/click issue: because cards are displayed asynchronously, cards don't overlap properly
+		Fix display issue for groupings: Cards are not showing that they were added or removed from a group
 	Hand similator
 		Add basic lands
 		Draw opening hands
