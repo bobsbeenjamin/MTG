@@ -295,10 +295,20 @@ function displayOneCanvas(canvas, context, collection, grouping1) {
 			let firstCard = group[0];
 			let groupTitle = "";
 			if (typeof(firstCard.grouping1) == "number") {
-				groupTitle = grouping1.options[grouping1.selectedIndex].text 
-					+ ": " + firstCard[grouping1.value]
+				groupTitle = grouping1.options[grouping1.selectedIndex].text + ": ";
+				// Display full color; also, don't display "Color: "
+				if (groupTitle == "Color: ") {
+					// Handle lands
+					if (firstCard.types.includes("Land"))
+						groupTitle = "Lands";
+					else
+						groupTitle = getFullColor(firstCard[grouping1.value]);
+				}
+				else {
+					groupTitle += firstCard[grouping1.value];
+				}
 			}
-			// For now, don't display "Card Type"
+			// For now, don't display "Card Type: "
 			else {
 				groupTitle = getSortVal(firstCard, grouping1.value);
 			}
@@ -548,8 +558,8 @@ function getSortVal(card, sortVal) {
 	else if (sortVal == "cmc") {
 		return card.cmc;
 	}
+	// Modify type line to sort how many players would prefer
 	else if (sortVal == "types") {
-		// Modify type line to sort how many players would prefer
 		var typeLine = card.types;
 		// Slice off "Legendary" from front
 		if (typeLine.includes("Legendary"))
@@ -564,10 +574,15 @@ function getSortVal(card, sortVal) {
 		// Remove land subtypes and super types
 		if (typeLine.includes("Land"))
 			typeLine = "Land";
+		// Remove additional enchantment types for auras
+		if (typeLine.includes("Aura"))
+			typeLine = "Enchantment - Aura";
+		// Fix long dash display issue
+		typeLine = typeLine.replace("—", "-");
 		return typeLine;
 	}
 	else if (sortVal == "rarity") {
-		var raritySortDict = {"Promo":1, "Mythic":1, "Rare":2, "Uncommon":3, 
+		var raritySortDict = {"Promo":0, "Mythic":1, "Rare":2, "Uncommon":3, 
 			"Common":4, "BasicLand":5};
 		return raritySortDict[card.rarity];
 	}
@@ -671,7 +686,7 @@ function handleMouseHover(canvas, event, cardCollection) {
 /**
  * Returns the index of the card in cardCollection that was clicked, or null if no card 
  * was clicked.
- * NOTE: 
+ * NOTE: This is a helper for handleScreenClick() and handleMouseHover().
  * @param x The x variable from pointerPosition
  * @param y The y variable from pointerPosition
  * @param cardCollection The set of card objects to iterate over, each of which should 
@@ -690,7 +705,7 @@ function getCardByCoordinates(x, y, cardCollection) {
 /**
  * Updates player stats for the given player. If nothing is passed, then this updates 
  * both players.
- * @param player A number representing player1 or player2
+ * @param {number} player A number representing player1 or player2
  */
 function updatePlayerInfo(player=null) {
 	if (!player) {
@@ -837,8 +852,8 @@ function getPointerPositionOnCanvas(canvas, event) {
 
 /**
  * Returns an object's color, based on it's mana cost.
- * @param String manaCost
- * @returns String color
+ * @param {string} manaCost A string representing a card's mana cost
+ * @returns {string} color A character representing a card's color
  */
 function getColor(manaCost) {
 	// Handle lands

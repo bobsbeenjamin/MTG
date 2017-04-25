@@ -18,10 +18,6 @@ TODOs:
 			[creature, non-creature]
 			[ground creature, evasive threat, removal, combat trick, card draw, mana accel, other non-land, land]
 		Fix bugs of displaying group title
-			Long dash (—) shows as somthing else (probably a UTF-8 issue)
-			Promo and Mythic are lumped together
-			Long Card Type names run out of room
-			Color shows as color code (W for White, etc)
 			Title text is too small
 	2HG
 		Add support for 2HG
@@ -61,6 +57,11 @@ Done:
 		Apply grouping functionality to deck (currently only works for cardpool)
 		Fix display/click issue: because cards are displayed asynchronously, cards don't overlap properly
 		Fix display issue for groupings: Cards are not showing that they were added or removed from a group
+		Fix bugs of displaying group title
+			Long dash (—) shows as somthing else (probably a UTF-8 issue)
+			Promo and Mythic are lumped together
+			Long Card Type names run out of room
+			Color shows as color code (W for White, etc)
 	Hand similator
 		Add basic lands
 		Draw opening hands
