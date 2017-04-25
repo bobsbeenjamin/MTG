@@ -1,6 +1,6 @@
 /*** TODO List for MTG Sealed Deck Generator Project at https://github.com/bobsbeenjamin/MTG/ ***/
 
-Time: 90 hrs
+Time: 120 hrs
 Note: The seed of this project was my initial attempt at implementing Magic in a browser.
 
 TODOs: 
@@ -9,9 +9,9 @@ TODOs:
 			Eventually, let the user select their format
 		Fix split cards
 			How to handle dups? (Mana cost, CMC, type, rules text)
+			Fix Promo stamp (unreadable on white and half-white cards)
 	User-defined sorting and grouping
 		Fix display/click issue: because cards are displayed asynchronously, cards don't overlap properly
-		Apply grouping functionality to deck (currently only works for cardpool)
 		Should each dropdown give sort and group options?
 		Link options (make selection from sort 1 modify options for sort 2, etc)
 		Break up large groups?
@@ -59,6 +59,7 @@ Done:
 		Add support for groupings
 		Impliment groupings for card type
 		Display group info (card type, CMC, etc) above each group
+		Apply grouping functionality to deck (currently only works for cardpool)
 	Hand similator
 		Add basic lands
 		Draw opening hands

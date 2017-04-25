@@ -89,14 +89,20 @@ function setUpGame() {
 	});
 	canvas_cardPool1.addEventListener("mousemove", function(){ 
 		handleMouseHover(canvas_cardPool1, event, cardPool1); });
+	canvas_cardPool1.addEventListener("taphold", function(){ 
+		handleMouseHover(canvas_cardPool1, event, cardPool1); });
 	canvas_deck1.addEventListener("click", function(){ 
 		handleScreenClick(canvas_deck1, event, deck1, cardPool1, 
 		document.getElementById("deck1GroupBy1_Default"));
 	});
 	canvas_deck1.addEventListener("mousemove", function(){ 
 		handleMouseHover(canvas_deck1, event, deck1); });
+	canvas_deck1.addEventListener("taphold", function(){ 
+		handleMouseHover(canvas_deck1, event, deck1); });
 	// (No need to register a click event for the hand)
 	canvas_hand1.addEventListener("mousemove", function(){ 
+		handleMouseHover(canvas_hand1, event, hand1); });
+	canvas_hand1.addEventListener("taphold", function(){ 
 		handleMouseHover(canvas_hand1, event, hand1); });
 	// Placeholder text for the cardZoom canvas
 	context_cardZoom.strokeRect(0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
