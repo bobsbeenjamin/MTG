@@ -1,0 +1,18 @@
+/*** TODO List for MTG Bracket Visualizer project at https://github.com/bobsbeenjamin/MTG/ ***/
+
+Time: 12 hrs
+
+TODOs: 
+	Data
+		Pull smaller chunks of data
+		Store and retreive data within the browser
+	Images
+		Handle special characters (",", "'", etc)
+		Switch to mtgcards.info?
+		
+Done: 
+	Data
+		Get data from source (MTG bracket google sheet)
+		Parse data
+	Images
+		Pull and display images
