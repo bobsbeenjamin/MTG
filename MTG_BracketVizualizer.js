@@ -67,6 +67,7 @@ function bracketizeResponse(data) {
 				cardName = (item==null || item.v==null) ? "" : item.v.toString();
 				cardName = cardName.replace("'", "");
 				source = "http://gatherer.wizards.com/Handlers/Image.ashx?name=" + cardName + "&type=card";
+				//source = "http://magiccards.info/query?q=" + cardName + "&s=cname";
 				element += "<a href='" + source + "'><img src='" + source + "' alt='" + cardName + "'></a>";
 			}
 			else if (col==3) {

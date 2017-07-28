@@ -2,15 +2,27 @@
 
 Time: 12 hrs
 
-TODOs: 
+TODOs:
+	Visualization
+		Show chunks of cards per level
+			4, 8, 16
+		Show very large numbers of cards per level: 256+
+		Order left-to-right
+		Order top-to-bottom
+		Let user set zoom factor (slider or +/- buttons)
+		Experiment with text
+			Try text only w/ image on hover
+			When should name display under/over card? (My guess is chunks of 4 and 8)
+	Navigation
+		Move up and down levels
 	Data
 		Pull smaller chunks of data
 		Store and retreive data within the browser
 	Images
 		Handle special characters (",", "'", etc)
-		Switch to mtgcards.info?
+		Switch to magiccards.info?
 		
-Done: 
+Done:
 	Data
 		Get data from source (MTG bracket google sheet)
 		Parse data
