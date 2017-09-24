@@ -160,7 +160,7 @@ function createCardPool() {
 function readCardPools() {
 	var cardSets = [KLD, AER];
 	// TODO: Let user select the set/block
-	cardSets = AKH;
+	cardSets = XLN;
 	return cardSets;
 }
 
