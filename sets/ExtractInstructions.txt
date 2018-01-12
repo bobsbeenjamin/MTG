@@ -4,7 +4,7 @@ When a new set is available in gatherer, this process will convert some gatherer
 		1b: Copy the "ExtractSetInfo_Rich.py" script into the work space
 	Step 2: Run and convert a separate gatherer search for each rarity:
 		2a: In Chrome, go to the following URL, except replace the set name and rarity appropriately: http://gatherer.wizards.com/Pages/Search/Default.aspx?sort=cn+&action=advanced&set=["Amonkhet"]&rarity=[R]
-		2b: Press Ctrl+j to open the console
+		2b: Press Ctrl+Shift+j to open the console
 		2c: Go to the Sources tab
 		2d: On the left hand nav, click the "Default.aspx" file to select it
 		2e: Right-click the file, and select "Save as..."
@@ -13,8 +13,9 @@ When a new set is available in gatherer, this process will convert some gatherer
 		2h: Rename the html file by appending "_[SetName]_[Rarity]" to the end
 		2i: Open the output file in a text editor, and delete the card objects for the cards that are specific to Planeswalker decks (you can usually easily tell where the divide is, because the color order starts over for non-commons, and basic lands show up for commons)
 		2j: Repeat step 2 for each other rarity
-		NOTE: Large sets will often have 2 web pages of results for commons. When that happens, run step 2 one last time, except: in step 2a, click the next page button instead of running a fresh search; and in step 2g, type "C2" on the command line (a special file name will be given to the output file).
+		NOTE1: Large sets will often have 2 web pages of results for commons. When that happens, run step 2 one last time, except: in step 2a, click the next page button instead of running a fresh search; and in step 2g, type "C2" on the command line (a special file name will be given to the output file).
+    NOTE2: Set with double-face cards will have each face get a result in the gatherer search. Eventually, I will handle this in the script, but for now, just delete the back face of those cards.
 	Step 3: Wrap up
-		3a: When you run the extract script for the last rarity, the rarity files will all be combined into a set file. When this happens, if duplicate card entries are detected, then you will be prompted to select the appropriate rarity, and the script will delete the other card.
-		3b: Once this process is done, repeat step 2i for the last added search result
+		3a: When you run the extract script for the last rarity, the rarity files will all be combined into a set file. When this happens, if duplicate card entries are detected, then you will be prompted to select the appropriate rarity, and the script will delete the other card(s).
+		3b: Once this process is done, repeat step 2i for the generated set file
 		NOTE: If there are 2 common files to process, then the combined set file will be created twice. That's no big deal.
