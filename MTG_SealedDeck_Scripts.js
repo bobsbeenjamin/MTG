@@ -125,7 +125,7 @@ function createCardPool() {
 	// Get the set or block to generate a pool from
 	var cardPool = readCardPools();
 	// Single set
-	if (typeof(cardPool) == "object") {
+	if (!Array.isArray(cardPool)) {
 		// Add the prerelease promo card (randomly selected rare or mythic)
 		var promoPool = cardPool.mythicPool.concat(cardPool.rarePool);
 		var promoCard = getIndividualCard(promoPool, "Promo", insertPos);
@@ -161,7 +161,7 @@ function createCardPool() {
 function readCardPools() {
 	var cardSets = [KLD, AER];
 	cardSets = XLN;
-	var cardSets = [XLN, RIX];
+	var cardSets = [RIX, XLN];
 	// TODO: Let user select the set/block
 	return cardSets;
 }
