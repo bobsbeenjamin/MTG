@@ -1,5 +1,6 @@
 /*
 Logic for Sealed Deck Project at https://github.com/bobsbeenjamin/MTG/MTG_SealedDeck.html
+TODOs for this project are stored under MTG_SealedDeck_TODO.txt
 */
 
 // UNUSED
@@ -159,8 +160,9 @@ function createCardPool() {
  */
 function readCardPools() {
 	var cardSets = [KLD, AER];
-	// TODO: Let user select the set/block
 	cardSets = XLN;
+	var cardSets = [XLN, RIX];
+	// TODO: Let user select the set/block
 	return cardSets;
 }
 

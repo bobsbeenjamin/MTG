@@ -5,9 +5,8 @@ Note: The seed of this project was my initial attempt at implementing Magic in a
 
 TODOs: 
 	Set info
-		Add Amonkhet
-			Eventually, let the user select their format
-		Fix split cards
+		Let the user select their format
+		Fix split and double-face cards
 			How to handle dups? (Mana cost, CMC, type, rules text)
 			Fix Promo stamp (unreadable on white and half-white cards)
 	User-defined sorting and grouping
@@ -16,7 +15,7 @@ TODOs:
 		Break up large groups?
 		Add new groupings:
 			[creature, non-creature]
-			[ground creature, evasive threat, removal, combat trick, card draw, mana accel, other non-land, land]
+			[ground pounder, evasive threat, removal, combat trick, card draw, mana accel, other non-land, land]
 		Fix bugs of displaying group title
 			Title text is too small
 	2HG
@@ -70,5 +69,5 @@ Done:
 		Add mulligan button
 		Add "Draw New Hand" button
 	Misc
-		Why does page sometime give "Wait" prompt? (This went away by itself)
+		Why does page sometime give "Wait" prompt? (This went away after moving image display to a callback function)
 		Change verbiage from draft to sealed
