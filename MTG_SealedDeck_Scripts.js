@@ -159,9 +159,10 @@ function createCardPool() {
  * set, or an array of sets that represent a block.
  */
 function readCardPools() {
-	var cardSets = [KLD, AER];
-	cardSets = XLN;
-	var cardSets = [RIX, XLN];
+	//var cardSets = [KLD, AER];
+	//cardSets = XLN;
+	//var cardSets = [RIX, XLN];
+	var cardSets = GRN;
 	// TODO: Let user select the set/block
 	return cardSets;
 }
