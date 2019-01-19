@@ -162,7 +162,8 @@ function readCardPools() {
 	//var cardSets = [KLD, AER];
 	//cardSets = XLN;
 	//var cardSets = [RIX, XLN];
-	var cardSets = GRN;
+	//var cardSets = GRN;
+	var cardSets = RNA;
 	// TODO: Let user select the set/block
 	return cardSets;
 }
