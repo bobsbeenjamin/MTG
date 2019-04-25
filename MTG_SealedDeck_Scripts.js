@@ -163,6 +163,7 @@ function readCardPools() {
 	//cardSets = XLN;
 	//var cardSets = [RIX, XLN];
 	//var cardSets = GRN;
+	//var cardSets = RNA;
 	var cardSets = WAR;
 	// TODO: Let user select the set/block
 	return cardSets;
