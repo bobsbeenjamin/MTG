@@ -3,7 +3,7 @@ import os
 # Constants
 inputFileName1 = "cardSearchResults1.html"
 inputFileName2 = "cardSearchResults2.html"
-inputFileNameFinal = "cardSearchResults.html"
+inputFileName3 = "cardSearchResults3.html"
 imgStr_Front = "http://gatherer.wizards.com"
 
 # Variables for the main loop
@@ -16,12 +16,11 @@ cardLine = 0
 splitCard = False
 
 ### Main loop ###
-for inputFileName in [inputFileName1, inputFileName2, inputFileNameFinal]:
+for inputFileName in [inputFileName1, inputFileName2, inputFileName3]:
     # Check that file exists
     if not os.path.isfile(inputFileName):
-        raw_input("Please save your Gatherer search results in a file named "
-            + inputFileName + " and try again")
-        exit()
+        raw_input("File " + inputFileName + " is missing")
+        continue
     # Open each input file and process it
     with open(inputFileName) as file:
         # Main loop
@@ -132,14 +131,14 @@ for inputFileName in [inputFileName1, inputFileName2, inputFileNameFinal]:
 
 setId = raw_input("What is the 3 letter set code for this set? ")
 # Start the set object; cast to string because otherwise Python uses unicode
-jsLines = str("var " + setId + ' = {\n\t"mythicPool": [\n')
+jsLines = str("var " + setId + " = {\n\tmythics = [\n")
 # Add the meat of the set object, one rarity at a time
 jsLines += mythicsJsLines[:-3] # Chop ", \n" off the end
-jsLines += '\n\t], \n\t"rarePool": [\n'
+jsLines += "\n\t], \n\trares = [\n"
 jsLines += raresJsLines[:-3]
-jsLines += '\n\t], \n\t"uncommonPool": [\n'
+jsLines += "\n\t], \n\tuncommons = [\n"
 jsLines += uncommonsJsLines[:-3]
-jsLines += '\n\t], \n\t"commonPool": [\n'
+jsLines += "\n\t], \n\tcommons = [\n"
 jsLines += commonsJsLines[:-3]
 jsLines += "\n\t]\n}"
 # Write the set file
