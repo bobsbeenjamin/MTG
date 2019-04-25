@@ -443,6 +443,13 @@ function shuffle(deck) {
 		deck[i] = deck[j];
 		deck[j] = temp;
 	}
+  // Shuffle twice, for good measure
+	for (var i=deck.length-1; i>0; i--) {
+		var j = Math.floor(Math.random() * (i + 1));
+		var temp = deck[i];
+		deck[i] = deck[j];
+		deck[j] = temp;
+	}
 	return deck;
 }
 
@@ -633,8 +640,7 @@ function button_drawCard(deck, hand, player) {
  * If the click was on a card in cardCollectionSrc, then it is removed from the source 
  * and added to cardCollectionDest.
  */
-function handleScreenClick(
-	canvas, event, cardCollectionSrc, cardCollectionDest, groupingDefault) {
+function handleScreenClick(canvas, event, cardCollectionSrc, cardCollectionDest, groupingDefault) {
 	// Catch right click
 	if (event.button == 2) {
 		event.preventDefault();
