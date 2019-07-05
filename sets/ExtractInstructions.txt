@@ -2,7 +2,7 @@ When a new set is available in gatherer, this process will convert some gatherer
 	Step 1: Create your work space (this step may not be needed if the work space was created for an earlier set in the block):
 		1a: Create a new folder to use as your work space 
 		1b: Copy the "ExtractSetInfo_Rich.py" script into the work space
-	Step 2: Run and convert a separate gatherer search for each rarity:
+	Step 2: Run and convert a gatherer search:
 		2a: In Chrome, go to the following URL, except replace the set name appropriately: http://gatherer.wizards.com/Pages/Search/Default.aspx?sort=cn+&action=advanced&set=["Amonkhet"]
 		2b: Press Ctrl+Shift+j to open the console
 		2c: Go to the Sources tab
