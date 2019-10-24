@@ -12,6 +12,7 @@
   <script src="sets/RNA.js"></script>
   <script src="sets/WAR.js"></script>
   <script src="sets/M20.js"></script>
+  <script src="sets/ELD.js"></script>
   <script src="sets/BasicLands.js"></script>
   <script src="MTG_SealedDeck_Scripts.js"></script>
   <style>
@@ -34,7 +35,7 @@
 <body>
   <h2>Your Card Pool</h2>
   <h4>By default, your card pool is displayed in the order that you would open packs. Use the dropdowns to create your own sort.</h4>
-  <label for="cardPoolFilter1">Sort 1:</label>
+  <label for="cardPoolFilter1">Sort By:</label>
   <select id="cardPoolFilter1"> <!-- onchange="button_sortCards(cardPool);"> -->
     <option value=""></option>
     <option value="color">Color</option>
@@ -42,7 +43,7 @@
     <option value="types">Card Type</option>
     <option value="rarity">Rarity</option>
   </select>
-  <label for="cardPoolFilter2">Sort 2:</label>
+  <label for="cardPoolFilter2">Then Sort By:</label>
   <select id="cardPoolFilter2">
     <option value=""></option>
     <option value="color">Color</option>
@@ -107,6 +108,19 @@
   <button id="player1_shuffle" class="hand" onclick="shuffle(deck1);">Shuffle Deck</button>
   <br/>
   <button id="test" onclick="testFunction();">Test</button>
+  <label for="formatSelector">Change set/block:</label>
+  <select id="formatSelector" onchange="document.reload();">
+    <option value="" id="format_Default"></option>
+    <option value="ELD">ELD - Throne of Eldraine</option>
+    <option value="M20">M20 - Core Set 20</option>
+    <option value="WAR">WAR - War of the Spark</option>
+    <option value="RNA">RNA - Ravnica Allegiance</option>
+    <option value="GRN">GRN - Guilds of Ravnica</option>
+    <option value="[RIX, XLN]">RIX - Ixalan Block</option>
+    <option value="XLN">XLN - Ixalan (set)</option>
+    <option value="[KLD, AER]">AER - Kaladesh Block</option>
+    <option value="KLD">KLD - Kaladesh (set)</option>
+  </select>
   <span id="status_txt">Status</span>
 </body>
 </html>

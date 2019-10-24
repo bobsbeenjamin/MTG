@@ -2,7 +2,7 @@ When a new set is available in gatherer, this process will convert some gatherer
 	Step 1: Create your work space (this step may not be needed if the work space was created for an earlier set in the block):
 		1a: Create a new folder to use as your work space 
 		1b: Copy the "ExtractSetInfo_Rich.py" script into the work space
-	Step 2: Run and convert a gatherer search:
+	Step 2: Run and convert a separate gatherer search for each rarity:
 		2a: In Chrome, go to the following URL, except replace the set name appropriately: http://gatherer.wizards.com/Pages/Search/Default.aspx?sort=cn+&action=advanced&set=["Amonkhet"]
 		2b: Press Ctrl+Shift+j to open the console
 		2c: Go to the Sources tab
@@ -15,4 +15,4 @@ When a new set is available in gatherer, this process will convert some gatherer
 	Step 3: Wrap up
 		3a: Run the extract script
 		3b: Rename the html files by appending "_[SetName]" to the end
-		3c: Open the output file in a text editor, and delete the card objects for the cards that are specific to Planeswalker decks and box promo (special cards). You can usually tell where the divide is, because the color order starts over for each rarity. Also, the search string in 2a should sort all special cards to the end, since they have collector numbers higher than the set total. Unfortunately, the collector number doesn't seem to be scrapable from the page.
+		3c: Open the output file in a text editor, and delete the card objects for the cards that are specific to Planeswalker decks and box promo (special cards). You can usually tell where the divide is, because the color order starts over. Also, the search string in 2a should sort all special cards to the end, since they either don't have collector numbers, or they have collector numbers higher than the set total. Unfortunately, the collector number doesn't seem to be scrapable from the page.

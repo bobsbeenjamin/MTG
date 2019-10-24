@@ -131,14 +131,14 @@ for inputFileName in [inputFileName1, inputFileName2, inputFileName3]:
 
 setId = raw_input("What is the 3 letter set code for this set? ")
 # Start the set object; cast to string because otherwise Python uses unicode
-jsLines = str("var " + setId + " = {\n\tmythics = [\n")
+jsLines = str("var " + setId + ' = {\n\t"mythicPool": [\n')
 # Add the meat of the set object, one rarity at a time
 jsLines += mythicsJsLines[:-3] # Chop ", \n" off the end
-jsLines += "\n\t], \n\trares = [\n"
+jsLines += '\n\t], \n\t"rarePool": [\n'
 jsLines += raresJsLines[:-3]
-jsLines += "\n\t], \n\tuncommons = [\n"
+jsLines += '\n\t], \n\t"uncommonPool": [\n'
 jsLines += uncommonsJsLines[:-3]
-jsLines += "\n\t], \n\tcommons = [\n"
+jsLines += '\n\t], \n\t"commonPool": [\n'
 jsLines += commonsJsLines[:-3]
 jsLines += "\n\t]\n}"
 # Write the set file
