@@ -30,6 +30,10 @@ var deck1Filter1 = null;
 var deck1Filter2 = null;
 var deck1GroupBy1 = null;
 var text_status = null;
+var text_player1 = null;
+var text_player2 = null;
+var imageLoadWarningShown = false;
+const canvasRenderVersions = new WeakMap();
 // offsets are used to "cascade" cards in a group
 const offset_Left = 0;
 const offset_Top = 15;
@@ -37,27 +41,31 @@ const offset_Top = 15;
 function isNumber(str) { return !isNaN(str) || str=='X'; }
 
 // Set up the game once the page has loaded
-$(document).ready(setUpGame);
-
-// Diplay ajax error messages nicely
-$(document).ajaxError(function(event) {
-    $("#test_txt").text("An error occurred: " + event);
-});
+document.addEventListener("DOMContentLoaded", setUpGame);
 
 /**
  * Currently:
  * Tries an ajax call to gatherer.
  */
 function testFunction() {
-	$("#test_txt").text("Running test...");
-	$.ajax({url: "http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=423769", 
-		success: function(result){$("#test_txt").text(result)
-	}});
+	setText("test_txt", "Running test...");
+	fetch("https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=423769")
+		.then(function(response) {
+			if (!response.ok)
+				throw new Error("HTTP " + response.status);
+			return response.text();
+		})
+		.then(function(result) {
+			setText("test_txt", result);
+		})
+		.catch(function(error) {
+			setText("test_txt", "An error occurred: " + error.message);
+		});
 }
 
 /**
  * Links display variables to the DOM. Creates and displays card pool of random cards. 
- * Currently, this is called when the page loads: "$(document).ready(setUpGame);"
+ * Currently, this is called when the DOMContentLoaded event fires.
  */
 function setUpGame() {
 	// Link drawing space variables to the DOM 
@@ -84,27 +92,46 @@ function setUpGame() {
 	deck1Filter2 = document.getElementById("deck1Filter2");
 	deck1GroupBy1 = document.getElementById("deck1GroupBy1");
 	// Register mouse events
-	canvas_cardPool1.addEventListener("click", function(){ 
+	canvas_cardPool1.addEventListener("click", function(event){ 
 		handleScreenClick(canvas_cardPool1, event, cardPool1, deck1, 
 		document.getElementById("cardPoolGroupBy1_Default"));
 	});
-	canvas_cardPool1.addEventListener("mousemove", function(){ 
+	canvas_cardPool1.addEventListener("mousemove", function(event){ 
 		handleMouseHover(canvas_cardPool1, event, cardPool1); });
-	canvas_cardPool1.addEventListener("taphold", function(){ 
+	canvas_cardPool1.addEventListener("touchstart", function(event){ 
 		handleMouseHover(canvas_cardPool1, event, cardPool1); });
-	canvas_deck1.addEventListener("click", function(){ 
+	canvas_deck1.addEventListener("click", function(event){ 
 		handleScreenClick(canvas_deck1, event, deck1, cardPool1, 
 		document.getElementById("deck1GroupBy1_Default"));
 	});
-	canvas_deck1.addEventListener("mousemove", function(){ 
+	canvas_deck1.addEventListener("mousemove", function(event){ 
 		handleMouseHover(canvas_deck1, event, deck1); });
-	canvas_deck1.addEventListener("taphold", function(){ 
+	canvas_deck1.addEventListener("touchstart", function(event){ 
 		handleMouseHover(canvas_deck1, event, deck1); });
 	// (No need to register a click event for the hand)
-	canvas_hand1.addEventListener("mousemove", function(){ 
+	canvas_hand1.addEventListener("mousemove", function(event){ 
 		handleMouseHover(canvas_hand1, event, hand1); });
-	canvas_hand1.addEventListener("taphold", function(){ 
+	canvas_hand1.addEventListener("touchstart", function(event){ 
 		handleMouseHover(canvas_hand1, event, hand1); });
+	addOnClick("button_cardPoolFilter", function() { button_sortCards("cardPool1"); });
+	addOnClick("button_deck1Filter", function() { button_sortCards("deck1"); });
+	addOnClick("show_lands", function() { showLands(); });
+	addOnClick("show_hand", function() {
+		if (document.getElementById("show_hand").textContent == "Modify Deck")
+			modifyDeck();
+		else
+			showHand();
+	});
+	addOnClick("player1_draw", function() { button_drawCard(deck1, hand1, 1); });
+	addOnClick("player1_mull", function() { newHand(1, true); });
+	addOnClick("player1_newHand", function() { newHand(1); });
+	addOnClick("player1_shuffle", function() { shuffle(deck1); });
+	addOnClick("test", testFunction);
+	document.getElementById("formatSelector").addEventListener("change", function(event) {
+		setSavedValue("mtgSealedFormat", event.target.value);
+		location.reload();
+	});
+	setSavedFormat();
 	// Placeholder text for the cardZoom canvas
 	context_cardZoom.strokeRect(0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
 	context_cardZoom.fillText("Hover over a card to display it here", 28, 150);
@@ -159,16 +186,29 @@ function createCardPool() {
  * set, or an array of sets that represent a block.
  */
 function readCardPools() {
-	//var cardSets = [KLD, AER];
-	//cardSets = XLN;
-	//var cardSets = [RIX, XLN];
-	//var cardSets = GRN;
-	//var cardSets = RNA;
-	//var cardSets = WAR;
-	//var cardSets = M20;
-	//var cardSets = ELD;
-	cardSets = document.getElementById("formatSelector").value;
-	return cardSets;
+	const cardSets = {
+		ELD: ELD,
+		M20: M20,
+		WAR: WAR,
+		RNA: RNA,
+		GRN: GRN,
+		RIX_XLN: [RIX, XLN],
+		XLN: XLN,
+		KLD_AER: [KLD, AER],
+		KLD: KLD
+	};
+	const selectedSet = document.getElementById("formatSelector").value;
+	return cardSets[selectedSet] || ELD;
+}
+
+function setSavedFormat() {
+	const formatSelector = document.getElementById("formatSelector");
+	const savedFormat = getSavedValue("mtgSealedFormat");
+	if (savedFormat && Array.from(formatSelector.options).some(function(option) {
+		return option.value == savedFormat;
+	})) {
+		formatSelector.value = savedFormat;
+	}
 }
 
 /**
@@ -237,7 +277,7 @@ function drawCardFromLibrary(deck, hand, player) {
 function displayEverything() {
 	displayCardPool1();
 	var button_showHand = document.getElementById("show_hand");
-	if (button_showHand.innerHTML == "Modify Deck")
+	if (button_showHand.textContent == "Modify Deck")
 		displayHand1()
 	else
 		displayDeck1();
@@ -269,8 +309,10 @@ function displayHand1() {
  * Displays all cards in collection and defines cardArea for each card displayed.
  */
 function displayOneCanvas(canvas, context, collection, grouping1) {
+	const renderVersion = (canvasRenderVersions.get(canvas) || 0) + 1;
+	canvasRenderVersions.set(canvas, renderVersion);
 	/*** Display card groupings ***/
-	if (collection.hasOwnProperty("groups")) {
+	if (Object.prototype.hasOwnProperty.call(collection, "groups")) {
 		// Set the collection to its groups property (for easier code below)
 		collection = collection.groups;
 		/*** Get total number of cards (for left offset) ***/
@@ -326,7 +368,7 @@ function displayOneCanvas(canvas, context, collection, grouping1) {
 				// Set this based on whether this is the last card added (the top card)
 				let isNotTopCard = (card < group.length - 1);
 				group[card].cardArea = getCardArea(leftBorder, topBorder, isNotTopCard);
-				displayCard(group[card], context, leftBorder, topBorder, isNotTopCard);
+				displayCard(group[card], context, leftBorder, topBorder, isNotTopCard, renderVersion);
 				leftBorder += offset_Left;
 			}
 			// Move left for next group
@@ -351,7 +393,7 @@ function displayOneCanvas(canvas, context, collection, grouping1) {
 			let leftBorder = (cardWidth + 4) * (card%8) + 2;
 			let topBorder = (cardHeight + 4) * row + 2;
 			collection[card].cardArea = getCardArea(leftBorder, topBorder);
-			displayCard(collection[card], context, leftBorder, topBorder);
+			displayCard(collection[card], context, leftBorder, topBorder, false, renderVersion);
 		}
 	}
 }
@@ -381,12 +423,9 @@ function getCardArea(leftBorder, topBorder, isNotTopCard=false) {
  * @param leftBorder {number} Number of pixels to the right of the left canvas edge
  * @param topBorder {number} Number of pixels below the top canvas edge
  */
-function displayCard(card, drawSpace, leftBorder, topBorder, isNotTopCard=false) {
+function displayCard(card, drawSpace, leftBorder, topBorder, isNotTopCard=false, renderVersion=null) {
 	/*** Set card display height, based on whether this a botton card in a group ***/
-	if (isNotTopCard)
-		var displayHeight = offset_Top;
-	else
-		var displayHeight = cardHeight;
+	const displayHeight = isNotTopCard ? offset_Top : cardHeight;
 	/***  First, draw the card in text form (as placholder) ***/
 	// blank out the drawing space
 	drawSpace.clearRect(leftBorder, topBorder, cardWidth, displayHeight);
@@ -413,12 +452,17 @@ function displayCard(card, drawSpace, leftBorder, topBorder, isNotTopCard=false)
 	}
 	*/
 	/***  Then, display the card nicely using gatherer ***/
-	var cardImg = new Image();
-	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" 
-		+ card.mvid + "&type=card";
+	const cardImg = new Image();
+	cardImg.src = `https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=${card.mvid}&type=card`;
+	cardImg.onerror = showImageLoadWarning;
 	cardImg.onload = function() { 
+		if (renderVersion !== null
+			&& canvasRenderVersions.get(drawSpace.canvas) !== renderVersion) {
+			return;
+		}
 		if (isNotTopCard) {
-			drawSpace.drawImage(cardImg, 0, 0, 223, 35, leftBorder, topBorder, 
+			const sourceHeight = cardImg.naturalHeight * (displayHeight / cardHeight);
+			drawSpace.drawImage(cardImg, 0, 0, cardImg.naturalWidth, sourceHeight, leftBorder, topBorder, 
 				cardWidth, displayHeight);
 		}
 		else {
@@ -439,22 +483,15 @@ function displayCard(card, drawSpace, leftBorder, topBorder, isNotTopCard=false)
  * @returns deck The shuffled deck of cards
  */
 function shuffle(deck) {
-	for (var i=deck.length-1; i>0; i--) {
-		var j = Math.floor(Math.random() * (i + 1));
-		var temp = deck[i];
-		deck[i] = deck[j];
-		deck[j] = temp;
-	}
-  // Shuffle twice, for good measure
-	for (var i=deck.length-1; i>0; i--) {
-		var j = Math.floor(Math.random() * (i + 1));
-		var temp = deck[i];
-		deck[i] = deck[j];
-		deck[j] = temp;
-	}
-	return deck;
+  // Loop backwards from the last element down to the second element
+  for (let i = deck.length - 1; i > 0; i--) {
+    // Pick a random index from 0 to i
+    const j = Math.floor(Math.random() * (i + 1));
+    // Swap elements array[i] and array[j] using destructuring
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
 }
-
 
 /**********************************/
 /*******   Event Handling   *******/
@@ -528,7 +565,7 @@ function sortCards(collection, filter1, filter2, grouping1) {
 				// Use cardType as the dictionary key
 				let cardType = card.grouping1;
 				// Add this card to the appropriate dictionary's sub-array
-				if (groups.hasOwnProperty(cardType)) {
+				if (Object.prototype.hasOwnProperty.call(groups, cardType)) {
 					groups[cardType].push(card);
 				}
 				// Add a new key to the dictionary, and initialize its value to an array 
@@ -649,12 +686,12 @@ function handleScreenClick(canvas, event, cardCollectionSrc, cardCollectionDest,
 		alert("");
 		return;
 	}
-	var pointerPos = getPointerPositionOnCanvas(canvas, event);
-	var cardIdx = getCardByCoordinates(pointerPos.x, pointerPos.y, cardCollectionSrc);
+	const pointerPos = getPointerPositionOnCanvas(canvas, event);
+	const cardIdx = getCardByCoordinates(pointerPos.x, pointerPos.y, cardCollectionSrc);
 	// Don't worry about a click that's not on a card
 	if (cardIdx == null)
 		return;
-	card = cardCollectionSrc.splice(cardIdx, 1)[0];
+	const card = cardCollectionSrc.splice(cardIdx, 1)[0];
 	cardCollectionDest.push(card);
 	// Redo the sort for each canvas where there is a grouping (otherwise the affected 
 	// group doesn't register that a card went missing or was added)
@@ -673,21 +710,21 @@ function handleScreenClick(canvas, event, cardCollectionSrc, cardCollectionDest,
  */
 function handleMouseHover(canvas, event, cardCollection) {
 	// Get card to display
-	var pointerPos = getPointerPositionOnCanvas(canvas, event);
-	var cardIdx = getCardByCoordinates(pointerPos.x, pointerPos.y, cardCollection);
+	const pointerPos = getPointerPositionOnCanvas(canvas, event);
+	const cardIdx = getCardByCoordinates(pointerPos.x, pointerPos.y, cardCollection);
 	if (cardIdx == null)
 		return;
-	var card = cardCollection[cardIdx];
-	cardStr = JSON.stringify(card);
+	const card = cardCollection[cardIdx];
+	const cardStr = JSON.stringify(card);
 	// Draw the card in the zoom box
 	context_cardZoom.fillText(card.name, 3, 150);
-	var cardImg = new Image();
-	cardImg.src = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" 
-		+ card.mvid + "&type=card";
+	let cardImg = new Image();
+	cardImg.src = `https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=${card.mvid}&type=card`;
+	cardImg.onerror = showImageLoadWarning;
 	cardImg.onload = function() {
 		context_cardZoom.drawImage(cardImg, 0, 0, canvas_cardZoom.width, canvas_cardZoom.height);
 		if (card.rarity == "Promo") {
-			var oldFont = context_cardZoom.font;
+			const oldFont = context_cardZoom.font;
 			context_cardZoom.font = "20px Arial";
 			context_cardZoom.strokeStyle = "White";
 			context_cardZoom.strokeText("Promo Card", 95, 170);
@@ -706,8 +743,10 @@ function handleMouseHover(canvas, event, cardCollection) {
  *            have a proper cardArea property defined
  */
 function getCardByCoordinates(x, y, cardCollection) {
-	for (var cardIdx=0; cardIdx<cardCollection.length; cardIdx++) {
-		cardArea = cardCollection[cardIdx].cardArea;
+	for (let cardIdx=0; cardIdx<cardCollection.length; cardIdx++) {
+		const cardArea = cardCollection[cardIdx].cardArea;
+		if (!cardArea)
+			continue;
 		if (x>=cardArea.left && x<=cardArea.right 
 			&& y>=cardArea.top && y<=cardArea.bottom)
 			return cardIdx;
@@ -730,13 +769,13 @@ function updatePlayerInfo(player=null) {
 		var newText = "Player 1";
 		newText += "  |  Cards in hand: " + hand1.length;
 		newText += "  |  Cards in deck: " + deck1.length;
-		$("#player1_txt").text(newText);
+		setText(text_player1, newText);
 	}
 	else {
 		var newText = "Player 2";
 		newText += "  |  Cards in hand: " + hand2.length;
 		newText += "  |  Cards in deck: " + deck2.length;
-		$("#player2_txt").text(newText);
+		setText(text_player2, newText);
 	}
 }
 
@@ -746,10 +785,10 @@ function updatePlayerInfo(player=null) {
  */
 function showLands(numOfEachLand=9) {
 	// Remove the "Show Lands" button
-	$("#show_lands").remove();
+	removeElement("show_lands");
 	// Build up a land array, then append it to the cardPool array
 	var lands = [];
-	for (landType=0; landType<BasicLands.length; landType++) {
+	for (let landType=0; landType<BasicLands.length; landType++) {
 		// Make a 1-element array with this land type, for getIndividualCard() to consume
 		var thisLandType = [BasicLands[landType]];
 		for (var i=0; i<numOfEachLand; i++) {
@@ -765,11 +804,11 @@ function showLands(numOfEachLand=9) {
  * Shows the hidden hand elements, and displays a 7 card opener.
  */
 function showHand() {
-	$(".hand").show();
+	setVisibleBySelector(".hand", true);
 	var button_showHand = document.getElementById("show_hand");
-	button_showHand.innerHTML = "Modify Deck";
-	button_showHand.onclick = function(){ modifyDeck(); };
-	$(".deck").hide();
+	button_showHand.textContent = "Modify Deck";
+	moveShowHandButtonToHandControls();
+	setVisibleBySelector(".deck", false);
 	deck1_Cache = deck1.slice(); // Store copy for later
 	shuffle(deck1);
 	drawOpeningHands();
@@ -780,16 +819,16 @@ function showHand() {
  * Returns the user from the hand display feature to the deck building feature.
  */
 function modifyDeck() {
-	$(".hand").hide();
+	setVisibleBySelector(".hand", false);
 	var button_showHand = document.getElementById("show_hand");
-	button_showHand.innerHTML = "Show Hand";
-	button_showHand.onclick = function(){ showHand(); };
+	button_showHand.textContent = "Show Hand";
+	moveShowHandButtonToDeckControls();
 	deck1 = deck1.concat(hand1);
 	// deck1_Cache should evaluate true under normal circumstances; I'm being defensive
 	if (deck1_Cache)
 		deck1 = deck1_Cache;
 	hand1 = [];
-	$(".deck").show();
+	setVisibleBySelector(".deck", true);
 	displayCardPool1();
 }
 
@@ -843,7 +882,7 @@ function updateStatus(newStatus, overWrite=true) {
 		status = newStatus;
 	else
 		status += newStatus;
-	$("#status_txt").text("Status: " + status);
+	setText(text_status, "Status: " + status);
 }
 
 
@@ -857,9 +896,10 @@ function updateStatus(newStatus, overWrite=true) {
  * @param event The onclick event
  */
 function getPointerPositionOnCanvas(canvas, event) {
+	const pointer = event.touches ? event.touches[0] : event;
     var boundingRect = canvas.getBoundingClientRect();
-    var xPos = event.clientX - boundingRect.left;
-    var yPos = event.clientY - boundingRect.top;
+    var xPos = pointer.clientX - boundingRect.left;
+    var yPos = pointer.clientY - boundingRect.top;
     return {x:xPos, y:yPos};
 }
 
@@ -917,3 +957,101 @@ function template(variable) {
 	alert(JSON.stringify(card));
 }
 
+function setText(elementOrId, text) {
+	const element = typeof elementOrId == "string"
+		? document.getElementById(elementOrId)
+		: elementOrId;
+	if (element) element.textContent = text;
+}
+
+function setVisibleBySelector(selector, isVisible) {
+	document.querySelectorAll(selector).forEach(function(element) {
+		element.style.display = isVisible ? getDefaultDisplay(element) : "none";
+	});
+}
+
+function getDefaultDisplay(element) {
+	switch (element.tagName) {
+		case "SPAN":
+			return "inline";
+		case "BUTTON":
+		case "CANVAS":
+			return "inline-block";
+		case "BR":
+			return "block";
+		default:
+			return "";
+	}
+}
+
+function removeElement(id) {
+	const element = document.getElementById(id);
+	if (element) element.remove();
+}
+
+function insertAfter(referenceElement, element) {
+	referenceElement.parentNode.insertBefore(element, referenceElement.nextSibling);
+}
+
+function getFollowingBreak(element) {
+	let nextNode = element.nextSibling;
+	while (nextNode) {
+		if (nextNode.nodeType == Node.ELEMENT_NODE && nextNode.tagName == "BR") {
+			return nextNode;
+		}
+		nextNode = nextNode.nextSibling;
+	}
+	return null;
+}
+
+function moveShowHandButtonToHandControls() {
+	const button_showHand = document.getElementById("show_hand");
+	const button_drawCard = document.getElementById("player1_draw");
+	button_drawCard.parentNode.insertBefore(button_showHand, button_drawCard);
+	button_showHand.style.display = "inline-block";
+	button_showHand.style.marginRight = "4px";
+}
+
+function moveShowHandButtonToDeckControls() {
+	const button_showHand = document.getElementById("show_hand");
+	const button_showLands = document.getElementById("show_lands");
+	if (button_showLands) {
+		insertAfter(button_showLands, button_showHand);
+	}
+	else {
+		const deckBreak = getFollowingBreak(canvas_deck1);
+		insertAfter(deckBreak || canvas_deck1, button_showHand);
+	}
+	button_showHand.style.display = "inline-block";
+	button_showHand.style.marginRight = "";
+}
+
+function addOnClick(id, callback) {
+	const element = document.getElementById(id);
+	if (element)
+		element.addEventListener("click", callback);
+}
+
+function showImageLoadWarning() {
+	if (imageLoadWarningShown) return;
+	imageLoadWarningShown = true;
+	updateStatus("Card image blocked or unavailable; showing text placeholders", false);
+}
+
+function getSavedValue(key) {
+	try {
+		return localStorage.getItem(key);
+	}
+	catch (error) {
+		return null;
+	}
+}
+
+function setSavedValue(key, value) {
+	try {
+		localStorage.setItem(key, value);
+	}
+	catch (error) {
+		// The app still works without persisted preferences
+	}
+}
